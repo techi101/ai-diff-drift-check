@@ -1,4 +1,4 @@
-<p align="center"><a href="https://ai-diff-drift-check.vercel.app"><img src="docs/screenshot-1440.png" alt="Drift Check demo: findings view with the drifted line highlighted" width="900"></a></p>
+<p align="center"><a href="https://ai-diff-drift-check.vercel.app"><img src="docs/screenshot-1440.png" alt="Drift check demo: a drifted diff that the regex rules passed and the LLM judge flagged" width="900"></a></p>
 
 **Problem:** a coding agent writes a diff after a security design review. Did the code drift from the requirements that review set?
 

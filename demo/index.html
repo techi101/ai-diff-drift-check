@@ -3,159 +3,184 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Drift Check · AI diff vs security review</title>
+<title>Drift check: AI diffs against a security review</title>
 <meta name="description" content="A labeled eval of 31 code diffs against 10 security requirements, comparing regex rules with a Gemini LLM judge on plain and tricky cases.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314132B'/%3E%3Crect x='7' y='9' width='18' height='3' rx='1' fill='%23FBFBFD'/%3E%3Crect x='7' y='15' width='12' height='3' rx='1' fill='%23C2362F'/%3E%3Crect x='7' y='21' width='15' height='3' rx='1' fill='%23FBFBFD'/%3E%3C/svg%3E">
 </head>
 <body>
-<header class="topbar">
-  <div class="wrap topbar-in">
-    <a class="brand" href="#top" aria-label="Drift Check home">
-      <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M9 16.5l4.5 4.5L23 11"/></svg></span>
-      <span class="brand-name">Drift Check</span>
-      <span class="brand-tag">Validate step eval</span>
-    </a>
-    <nav class="nav">
-      <a href="#findings">Findings</a>
-      <a href="#scores">Scores</a>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="mark" href="#main">Drift check</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#scores">Scoreboard</a>
+      <a href="#findings">Cases</a>
       <a href="#requirements">Requirements</a>
-      <a class="btn btn-dark" href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        <span>GitHub</span>
-      </a>
+      <a href="#method">Method</a>
+      <a class="nav-gh" href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">GitHub</a>
     </nav>
   </div>
 </header>
 
-<main id="top">
-  <section class="hero wrap">
-    <p class="eyebrow">What am I looking at</p>
-    <h1>Does AI written code still honor the security review?</h1>
-    <p class="lede"><b>Problem.</b> A coding agent writes a diff after a security design review. Did it drift from the requirements the review set?</p>
-    <p class="lede"><b>Result.</b> <span id="headline">Loading results</span></p>
-    <div class="kpis" id="kpis" aria-live="polite"></div>
-    <p class="v1note" id="v1note"></p>
-  </section>
+<main id="main">
+  <div class="hero-band">
+  <section class="hero wrap" aria-labelledby="h1">
+    <h1 id="h1">The rules passed it.<br>It logs every auth header.</h1>
+    <div class="hero-lead">
+      <p class="hero-result" id="heroResult">On 31 hand-made cases, rules alone caught 11 of 17 drifts (1 of 6 tricky). Rules then an LLM judge caught 16 of 17.</p>
+      <p class="hero-links">
+        <a class="btn" href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">Read the code on GitHub</a>
+        <a class="btn btn-line" href="#scores">See the scoreboard</a>
+      </p>
+    </div>
 
-  <section class="wrap section" id="findings">
-    <div class="section-head">
-      <div>
-        <h2>Findings</h2>
-        <p class="muted">Pick a case to see the diff, the line that drifts, and what the regex checker and the LLM judge said about it.</p>
-      </div>
-    </div>
-    <div class="toolbar" role="toolbar" aria-label="Filters">
-      <div class="seg" id="kindFilter" role="tablist" aria-label="Case type">
-        <button data-v="all" class="on">All <span class="cnt"></span></button>
-        <button data-v="plain">Plain <span class="cnt"></span></button>
-        <button data-v="hard">Tricky <span class="cnt"></span></button>
-      </div>
-      <div class="seg" id="outFilter" role="tablist" aria-label="Outcome">
-        <button data-v="all" class="on">Any outcome</button>
-        <button data-v="caught">Caught <span class="cnt"></span></button>
-        <button data-v="missed">Missed <span class="cnt"></span></button>
-        <button data-v="false_alarm">False alarm <span class="cnt"></span></button>
-        <button data-v="review">Needs review <span class="cnt"></span></button>
-        <button data-v="judge_wrong">Judge wrong <span class="cnt"></span></button>
-      </div>
-    </div>
-    <div class="findings">
-      <aside class="list" id="caseList" aria-label="Cases"></aside>
-      <article class="detail" id="detail"></article>
-    </div>
-  </section>
-
-  <section class="wrap section" id="scores">
-    <div class="section-head">
-      <div>
-        <h2>Scores: regex vs LLM judge</h2>
-        <p class="muted">Violated is the positive class. Every count shows its denominator; brackets are Wilson 95% intervals, which are wide because the sets are small.</p>
-      </div>
-      <div class="seg" id="subsetToggle" role="tablist" aria-label="Subset">
-        <button data-v="plain">Plain</button>
-        <button data-v="hard" class="on">Tricky</button>
-        <button data-v="all">All</button>
-      </div>
-    </div>
-    <div class="scores">
-      <div class="card score-card">
-        <div class="card-head">
-          <h3 id="scoreTitle">Tricky diffs</h3><span class="chip chip-ok">Measured</span>
+    <figure class="hero-case" id="heroCase">
+      <figcaption class="plate-cap"><span id="heroReq">Figure 1. Requirement SR-07 from the design review: Passwords, tokens and auth headers must never be written to logs.</span><span id="heroCaseId">sr07-hard-headers</span></figcaption>
+      <div class="plate">
+      <div class="hero-diff" id="heroDiff"></div>
+      <div class="hero-verdicts">
+        <div class="hv hv-rules">
+          <div class="hv-who">Regex rules</div>
+          <div class="hv-said"><span class="vword v-honored" id="hvRules">honored</span></div>
+          <p class="hv-note" id="hvRulesNote">Touched, no bad pattern found. Wrong: this ships with a green check.</p>
         </div>
-        <div class="table-scroll"><table class="score-table" id="scoreTable"></table></div>
+        <div class="hv hv-judge">
+          <div class="hv-who">LLM judge</div>
+          <div class="hv-said"><span class="vword v-violated" id="hvJudge">violated</span></div>
+          <p class="hv-note" id="hvJudgeNote">3 of 3 runs, on both Gemini models.</p>
+        </div>
       </div>
-      <div class="card judge-card" id="judgeCard"></div>
-    </div>
-  </section>
+      </div>
+    </figure>
 
-  <section class="wrap section" id="requirements">
-    <div class="section-head">
+  </section>
+  </div>
+
+  <section class="wrap section" id="scores" aria-labelledby="scoresH">
+    <div class="sec-head">
       <div>
-        <h2>Security requirements</h2>
-        <p class="muted">The 10 requirements from the mock design review. Each chip is one labeled case, coloured by what the regex rules did. Click it to open the finding.</p>
+        <h2 id="scoresH">Who caught the drift</h2>
+        <p class="sec-sub" id="scoresSub">Each square is one labeled case. Solid squares are the violations, outlined squares are the cases that honor the requirement.</p>
       </div>
-      <div class="legend" aria-label="Legend">
-        <span><i class="dot d-caught"></i>Caught</span>
-        <span><i class="dot d-miss"></i>Missed</span>
-        <span><i class="dot d-fa"></i>False alarm</span>
-        <span><i class="dot d-review"></i>Needs review</span>
-        <span><i class="dot d-pass"></i>Correct pass</span>
+      <div class="switch" id="subsetToggle" role="group" aria-label="Which cases">
+        <button type="button" data-v="plain" aria-pressed="false">Plain</button>
+        <button type="button" data-v="hard" aria-pressed="false">Tricky</button>
+        <button type="button" data-v="all" aria-pressed="true">All</button>
       </div>
     </div>
-    <div class="reqs" id="reqList"></div>
+    <div class="board" id="board"></div>
+    <div class="legend" aria-label="Legend">
+      <span><i class="sq caught"></i>Caught</span>
+      <span><i class="sq silent_miss"></i>Silent miss</span>
+      <span><i class="sq review_violation"></i>Left unresolved</span>
+      <span><i class="sq correct_pass"></i>Correct pass</span>
+      <span><i class="sq false_alarm"></i>False alarm</span>
+      <span><i class="sq review_ok"></i>Honored, unresolved</span>
+    </div>
+    <div class="judge-notes" id="judgeNotes"></div>
+    <details class="fold">
+      <summary>All metrics for these cases</summary>
+      <p class="fold-sub">Violated is the positive class. Brackets are Wilson 95% intervals, which are wide because the sets are small.</p>
+      <div class="table-scroll"><table class="metrics" id="scoreTable"></table></div>
+    </details>
   </section>
 
-  <section class="wrap section" id="method">
-    <div class="card method">
-      <h2>How it was measured</h2>
-      <p>31 small diffs written by hand across 10 security requirements, each labeled honored or violated before the rules were run. 21 are plain (what an agent normally writes) and 10 are tricky (helpers, variables, look alike strings).</p>
-      <button class="btn btn-ghost" id="moreBtn" aria-expanded="false" aria-controls="moreBody">Show more</button>
-      <div id="moreBody" hidden>
-        <h3>Pipeline</h3>
-        <ol>
-          <li><b>Rules.</b> One regex rule per requirement in <code>drift_check/rules.py</code>. It reads only the lines the diff adds and answers honored, violated or unknown.</li>
-          <li><b>Judge.</b> <code>drift_check/llm_judge.py</code> sends the prompt from <code>drift_check/judge.py</code> to two Gemini models, <code>gemini-3.5-flash-lite</code> and <code>gemini-3.1-flash-lite</code> (free tier, temperature 0), three times per case each, and takes the majority verdict. Bad JSON or a split vote counts as unknown. Every reply is cached in <code>results/judge_cache/</code>, so the numbers can be audited and rerun for free.</li>
-          <li><b>Three systems.</b> Regex alone. Regex then judge, where only the cases the rules mark unknown go to the judge. Judge alone, where the judge sees every case with no rules.</li>
-          <li><b>Scoring.</b> <code>drift_check/evaluate.py</code> counts caught, false alarms, silent misses (said honored on a real violation) and unresolved cases, split by plain and tricky. Brackets are Wilson 95% intervals.</li>
-        </ol>
-        <h3>Outcome labels on this page</h3>
-        <ul>
-          <li><b>Caught</b>: labeled violated, rules said violated.</li>
-          <li><b>Missed</b>: labeled violated, rules said honored (silent miss) or unknown (sent to review).</li>
-          <li><b>False alarm</b>: labeled honored, rules said violated.</li>
-          <li><b>Needs review</b>: rules said unknown.</li>
-        </ul>
-        <h3>Honest limits</h3>
-        <ul>
-          <li>The plain numbers are in sample. The rules and plain cases were written together, so 1.00 precision on plain says little. The tricky set is the more honest number and has only 10 cases.</li>
-          <li>One labeler, Python and Flask only, no inter rater check. Real agent diffs are bigger and span files.</li>
-          <li>The rules see one diff with no repo context, so they cannot follow a helper into another file.</li>
-          <li>An earlier run had three comments in the cases that hinted at the answer (<code># wraps hashlib.md5</code>, <code>fake value, never a real key</code>, <code># aborts 404 if not the caller's</code>), and the judge scored 31 of 31 there. Those comments were removed (the test file path moved into the diff header, and <code>test_token_not_real_123456</code> became <code>test_token_123456</code>), labels unchanged, and every number on this page is from the rerun. The old file is kept as <code>data/cases_v1_with_hints.jsonl</code>.</li>
-          <li>Function names such as <code>quick_digest</code> and <code>load_owned</code> were kept because real code has names like that. Without them, two labels would depend only on code outside the diff.</li>
-          <li>Rule errors stay in the regex then judge cascade, because the judge is never asked about cases the rules already decided.</li>
-          <li>Both judges are Flash Lite models from one vendor, two generations apart. That is a weaker comparison than across model tiers. <code>gemini-3.6-flash</code> was tried as the second model, but the free tier allows it 20 requests per day and the run needs 93, so it was stopped and none of its replies are used.</li>
-          <li>One prompt, three runs per case. A different model or prompt could score differently, and the judge saw the requirement text the cases were written against.</li>
-          <li>The highlighted drift line and the CWE tag on each finding were added for this page. They do not change any label or score.</li>
-          <li>All code is synthetic and written for the repo. This is not a claim about how Seezo's validator works.</li>
-        </ul>
-        <h3>Reproduce</h3>
-        <pre class="code-block">python data/build_cases.py
+  <section class="wrap section" id="findings" aria-labelledby="findingsH">
+    <div class="sec-head">
+      <div>
+        <h2 id="findingsH">Every case, line by line</h2>
+        <p class="sec-sub">Pick a case to see the diff, the line that drifts, and what the regex rules and both judges said about it.</p>
+      </div>
+    </div>
+    <div class="filters">
+      <div class="tabs" id="kindFilter" role="group" aria-label="Case type">
+        <button type="button" data-v="all" class="on">All <span class="cnt"></span></button>
+        <button type="button" data-v="plain">Plain <span class="cnt"></span></button>
+        <button type="button" data-v="hard">Tricky <span class="cnt"></span></button>
+      </div>
+      <div class="tabs" id="outFilter" role="group" aria-label="What the rules did">
+        <button type="button" data-v="all" class="on">Any outcome</button>
+        <button type="button" data-v="caught">Caught <span class="cnt"></span></button>
+        <button type="button" data-v="missed">Missed <span class="cnt"></span></button>
+        <button type="button" data-v="false_alarm">False alarm <span class="cnt"></span></button>
+        <button type="button" data-v="review">Needs review <span class="cnt"></span></button>
+        <button type="button" data-v="judge_wrong">Judge wrong <span class="cnt"></span></button>
+      </div>
+    </div>
+    <div class="explorer">
+      <div class="list" id="caseList" aria-label="Cases"></div>
+      <article class="detail" id="detail" aria-live="polite"></article>
+    </div>
+  </section>
+
+  <section class="wrap section" id="requirements" aria-labelledby="reqH">
+    <div class="sec-head">
+      <div>
+        <h2 id="reqH">The ten requirements</h2>
+        <p class="sec-sub">From the mock design review. Each mark is one case, shaded by what the regex rules did with it. Select a mark to open that case.</p>
+      </div>
+    </div>
+    <div class="table-scroll"><table class="matrix" id="reqMatrix"></table></div>
+  </section>
+
+  <section class="wrap section prose" id="method" aria-labelledby="methodH">
+    <h2 id="methodH">How it was measured</h2>
+    <p>31 small diffs written by hand across 10 security requirements, each labeled honored or violated before the rules were run. 21 are plain (what an agent normally writes) and 10 are tricky (helpers, variables, look alike strings).</p>
+    <p>Three systems were scored. Regex alone. Regex then judge, where only the cases the rules mark unknown go to the judge. Judge alone, where the judge sees every case with no rules.</p>
+    <p id="v1note"></p>
+
+    <details class="fold">
+      <summary>Pipeline</summary>
+      <ol>
+        <li><b>Rules.</b> One regex rule per requirement in <code>drift_check/rules.py</code>. It reads only the lines the diff adds and answers honored, violated or unknown.</li>
+        <li><b>Judge.</b> <code>drift_check/llm_judge.py</code> sends the prompt from <code>drift_check/judge.py</code> to two Gemini models, <code>gemini-3.5-flash-lite</code> and <code>gemini-3.1-flash-lite</code> (free tier, temperature 0), three times per case each, and takes the majority verdict. Bad JSON or a split vote counts as unknown. Every reply is cached in <code>results/judge_cache/</code>, so the numbers can be audited and rerun for free.</li>
+        <li><b>Scoring.</b> <code>drift_check/evaluate.py</code> counts caught, false alarms, silent misses (said honored on a real violation) and unresolved cases, split by plain and tricky. Brackets are Wilson 95% intervals.</li>
+      </ol>
+    </details>
+    <details class="fold">
+      <summary>What the outcome words mean</summary>
+      <ul>
+        <li><b>Caught</b>: labeled violated, rules said violated.</li>
+        <li><b>Missed</b>: labeled violated, rules said honored (silent miss) or unknown (sent to review).</li>
+        <li><b>False alarm</b>: labeled honored, rules said violated.</li>
+        <li><b>Needs review</b>: rules said unknown.</li>
+      </ul>
+    </details>
+    <details class="fold">
+      <summary>Honest limits</summary>
+      <ul>
+        <li>The plain numbers are in sample. The rules and plain cases were written together, so 1.00 precision on plain says little. The tricky set is the more honest number and has only 10 cases.</li>
+        <li>One labeler, Python and Flask only, no inter rater check. Real agent diffs are bigger and span files.</li>
+        <li>The rules see one diff with no repo context, so they cannot follow a helper into another file.</li>
+        <li>An earlier run had three comments in the cases that hinted at the answer (<code># wraps hashlib.md5</code>, <code>fake value, never a real key</code>, <code># aborts 404 if not the caller's</code>), and the judge scored 31 of 31 there. Those comments were removed (the test file path moved into the diff header, and <code>test_token_not_real_123456</code> became <code>test_token_123456</code>), labels unchanged, and every number on this page is from the rerun. The old file is kept as <code>data/cases_v1_with_hints.jsonl</code>.</li>
+        <li>Function names such as <code>quick_digest</code> and <code>load_owned</code> were kept because real code has names like that. Without them, two labels would depend only on code outside the diff.</li>
+        <li>Rule errors stay in the regex then judge cascade, because the judge is never asked about cases the rules already decided.</li>
+        <li>Both judges are Flash Lite models from one vendor, two generations apart. That is a weaker comparison than across model tiers. <code>gemini-3.6-flash</code> was tried as the second model, but the free tier allows it 20 requests per day and the run needs 93, so it was stopped and none of its replies are used.</li>
+        <li>One prompt, three runs per case. A different model or prompt could score differently, and the judge saw the requirement text the cases were written against.</li>
+        <li>The highlighted drift line and the CWE tag on each finding were added for this page. They do not change any label or score.</li>
+        <li>All code is synthetic and written for the repo. This is not a claim about how Seezo's validator works.</li>
+      </ul>
+    </details>
+    <details class="fold">
+      <summary>Run it yourself</summary>
+      <pre class="code-block">python data/build_cases.py
 python -m drift_check eval
 python scripts/run_judge.py gemini-3.5-flash-lite   # cached replies
 python scripts/run_judge.py gemini-3.1-flash-lite
 python demo/build_data.py     # writes the data this page reads</pre>
-      </div>
-    </div>
+    </details>
   </section>
 </main>
 
-<footer class="footer">
-  <div class="wrap footer-in">
-    <span>Built against the Validate step described on seezo.io. Results from <code>python -m drift_check eval</code> and <code>scripts/run_judge.py</code>.</span>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p>Built against the Validate step described on seezo.io. Not affiliated with Seezo. Results come from the eval and judge scripts in the repo.</p>
     <a href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">github.com/techi101/ai-diff-drift-check</a>
   </div>
 </footer>
