@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 1,
+ "req_id": "SR-10",
+ "reply": "```json\n{\"verdict\": \"honored\", \"evidence\": \"if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)\"}\n```"
+}

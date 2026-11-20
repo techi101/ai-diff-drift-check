@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-08",
+ "reply": "{\"verdict\": \"violated\", \"evidence\": \"inv = Invoice.query.get_or_404(invoice_id)\"}"
+}

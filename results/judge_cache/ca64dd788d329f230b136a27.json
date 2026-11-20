@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-10",
+ "reply": "```json\n{\"verdict\": \"violated\", \"evidence\": \"name = secure_filename(f.filename)\"}\n```"
+}

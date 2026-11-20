@@ -38,6 +38,7 @@
     <p class="lede"><b>Problem.</b> A coding agent writes a diff after a security design review. Did it drift from the requirements the review set?</p>
     <p class="lede"><b>Result.</b> <span id="headline">Loading results</span></p>
     <div class="kpis" id="kpis" aria-live="polite"></div>
+    <p class="v1note" id="v1note"></p>
   </section>
 
   <section class="wrap section" id="findings">
@@ -117,7 +118,7 @@
         <h3>Pipeline</h3>
         <ol>
           <li><b>Rules.</b> One regex rule per requirement in <code>drift_check/rules.py</code>. It reads only the lines the diff adds and answers honored, violated or unknown.</li>
-          <li><b>Judge.</b> <code>drift_check/llm_judge.py</code> sends the prompt from <code>drift_check/judge.py</code> to Gemini (free tier, temperature 0) three times per case and takes the majority verdict. Bad JSON or a split vote counts as unknown. Every reply is cached in <code>results/judge_cache/</code>, so the numbers can be audited and rerun for free.</li>
+          <li><b>Judge.</b> <code>drift_check/llm_judge.py</code> sends the prompt from <code>drift_check/judge.py</code> to two Gemini models, <code>gemini-3.5-flash-lite</code> and <code>gemini-3.1-flash-lite</code> (free tier, temperature 0), three times per case each, and takes the majority verdict. Bad JSON or a split vote counts as unknown. Every reply is cached in <code>results/judge_cache/</code>, so the numbers can be audited and rerun for free.</li>
           <li><b>Three systems.</b> Regex alone. Regex then judge, where only the cases the rules mark unknown go to the judge. Judge alone, where the judge sees every case with no rules.</li>
           <li><b>Scoring.</b> <code>drift_check/evaluate.py</code> counts caught, false alarms, silent misses (said honored on a real violation) and unresolved cases, split by plain and tricky. Brackets are Wilson 95% intervals.</li>
         </ol>
@@ -133,16 +134,19 @@
           <li>The plain numbers are in sample. The rules and plain cases were written together, so 1.00 precision on plain says little. The tricky set is the more honest number and has only 10 cases.</li>
           <li>One labeler, Python and Flask only, no inter rater check. Real agent diffs are bigger and span files.</li>
           <li>The rules see one diff with no repo context, so they cannot follow a helper into another file.</li>
-          <li>Three tricky cases carry a code comment that hints at the answer (<code># wraps hashlib.md5</code>, <code>fake value, never a real key</code>, <code># aborts 404 if not the caller's</code>). The judge may have leaned on those; regex ignores them. Real agent diffs will not always be that helpful.</li>
-          <li>The judge got all 31 cases right, but with 31 cases the 95% interval on its recall still runs from 0.82 to 1.00. Rule errors stay in the regex then judge cascade, because the judge is never asked about cases the rules already decided.</li>
-          <li>One model, one prompt, three runs per case. A different model or prompt could score differently, and the judge saw the requirement text the cases were written against.</li>
+          <li>An earlier run had three comments in the cases that hinted at the answer (<code># wraps hashlib.md5</code>, <code>fake value, never a real key</code>, <code># aborts 404 if not the caller's</code>), and the judge scored 31 of 31 there. Those comments were removed (the test file path moved into the diff header, and <code>test_token_not_real_123456</code> became <code>test_token_123456</code>), labels unchanged, and every number on this page is from the rerun. The old file is kept as <code>data/cases_v1_with_hints.jsonl</code>.</li>
+          <li>Function names such as <code>quick_digest</code> and <code>load_owned</code> were kept because real code has names like that. Without them, two labels would depend only on code outside the diff.</li>
+          <li>Rule errors stay in the regex then judge cascade, because the judge is never asked about cases the rules already decided.</li>
+          <li>Both judges are Flash Lite models from one vendor, two generations apart. That is a weaker comparison than across model tiers. <code>gemini-3.6-flash</code> was tried as the second model, but the free tier allows it 20 requests per day and the run needs 93, so it was stopped and none of its replies are used.</li>
+          <li>One prompt, three runs per case. A different model or prompt could score differently, and the judge saw the requirement text the cases were written against.</li>
           <li>The highlighted drift line and the CWE tag on each finding were added for this page. They do not change any label or score.</li>
           <li>All code is synthetic and written for the repo. This is not a claim about how Seezo's validator works.</li>
         </ul>
         <h3>Reproduce</h3>
         <pre class="code-block">python data/build_cases.py
 python -m drift_check eval
-python scripts/run_judge.py   # Gemini judge, cached replies
+python scripts/run_judge.py gemini-3.5-flash-lite   # cached replies
+python scripts/run_judge.py gemini-3.1-flash-lite
 python demo/build_data.py     # writes the data this page reads</pre>
       </div>
     </div>

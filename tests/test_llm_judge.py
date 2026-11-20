@@ -81,3 +81,26 @@ def test_wilson_interval():
     lo, hi = wilson(1, 6)
     assert 0.02 < lo < 0.04 and 0.55 < hi < 0.57
     assert wilson(10, 10)[1] == 1.0
+
+
+def test_cache_tag_starts_a_fresh_cache(tmp_path):
+    calls = []
+
+    def fake_call(prompt):
+        calls.append(prompt)
+        return '{"verdict": "honored", "evidence": "x"}', "m"
+
+    make_judge("m", str(tmp_path), repeats=1, call=fake_call)("SR-05", "t", diff("+x = 1"))
+    make_judge("m", str(tmp_path), repeats=1, call=fake_call, cache_tag="v2")("SR-05", "t", diff("+x = 1"))
+    assert len(calls) == 2  # the tagged judge did not reuse the untagged reply
+
+
+def test_v2_cases_keep_labels_and_drop_hint_comments():
+    import json
+    old = {json.loads(l)["id"]: json.loads(l) for l in open(CASES.replace("cases.jsonl", "cases_v1_with_hints.jsonl"), encoding="utf-8")}
+    new = {c["id"]: c for c in load_cases(CASES)}
+    assert old.keys() == new.keys()
+    assert all(old[k]["label"] == new[k]["label"] and old[k]["kind"] == new[k]["kind"] for k in old)
+    text = "".join(c["diff"] for c in new.values())
+    for hint in ("wraps hashlib.md5", "fake value", "not_real", "aborts 404"):
+        assert hint not in text

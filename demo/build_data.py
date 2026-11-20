@@ -91,23 +91,47 @@ def main():
         "scores": {"all": score(rows), **by_kind(rows)},
         "judge": {"run": False},
     }
-    jr_path = os.path.join(ROOT, "results", "judge_results.json")
-    if os.path.exists(jr_path):
-        with open(jr_path, encoding="utf-8") as f:
-            jr = json.load(f)
-        data["judge"] = {"run": True, "model": jr["model"], "model_versions": jr["model_versions"],
-                         "temperature": jr["temperature"], "repeats": jr["repeats"],
-                         "stability": jr["stability"]}
-        data["systems"] = {"regex": jr["regex"], "cascade": jr["cascade"], "judge_alone": jr["judge_alone"]}
-        assert jr["regex"]["all"]["caught"] == data["scores"]["all"]["caught"]
+    # v2 judge runs (hint comments removed), one file per model
+    MODELS = [("gemini-3.5-flash-lite", "3.5 Flash Lite"), ("gemini-3.1-flash-lite", "3.1 Flash Lite")]
+    runs = []
+    for model, short in MODELS:
+        path = os.path.join(ROOT, "results", f"judge_v2_{model}.json")
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                runs.append((model, short, json.load(f)))
+    if runs:
+        data["systems"] = {"regex": runs[0][2]["regex"]}
+        data["judge"] = {"run": True, "temperature": 0, "repeats": 3, "models": []}
+        for model, short, jr in runs:
+            assert jr["regex"]["all"]["caught"] == data["scores"]["all"]["caught"]
+            assert jr["cases_file"] == "data/cases.jsonl"
+            data["systems"][model] = {"cascade": jr["cascade"], "judge_alone": jr["judge_alone"]}
+            wrong = [cid for cid, pc in jr["per_case"].items() if pc["judge_alone"] != by_id[cid]["label"]]
+            cwrong = [cid for cid, pc in jr["per_case"].items() if pc["cascade"] != by_id[cid]["label"]]
+            data["judge"]["models"].append({"model": model, "short": short, "versions": jr["model_versions"],
+                                            "stability": jr["stability"], "alone_wrong": wrong,
+                                            "cascade_wrong": cwrong})
         for item in out_cases:
-            pc = jr["per_case"][item["id"]]
-            item["judge"] = {"alone": pc["judge_alone"], "alone_why": pc["judge_alone_why"],
-                             "cascade": pc["cascade"], "cascade_stage": pc["cascade_stage"],
-                             "runs": [r["verdict"] for r in pc["runs"]], "unanimous": pc["unanimous"]}
-        # every case gets a prompt now, since the judge alone saw all of them
-        for item in out_cases:
+            item["judges"] = {}
+            for model, short, jr in runs:
+                pc = jr["per_case"][item["id"]]
+                item["judges"][model] = {"alone": pc["judge_alone"], "alone_why": pc["judge_alone_why"],
+                                         "cascade": pc["cascade"], "cascade_stage": pc["cascade_stage"],
+                                         "runs": [r["verdict"] for r in pc["runs"]], "unanimous": pc["unanimous"]}
             item["judge_prompt"] = build_prompt(item["req_id"], RULES[item["req_id"]].text, by_id[item["id"]]["diff"])
+        if len(runs) == 2:
+            a, b = runs[0][2]["per_case"], runs[1][2]["per_case"]
+            data["judge"]["models_agree"] = sum(a[k]["judge_alone"] == b[k]["judge_alone"] for k in a)
+    # earlier run on the v1 cases, kept so the change is visible
+    v1 = os.path.join(ROOT, "results", "judge_results_v1_with_hints.json")
+    if os.path.exists(v1):
+        with open(v1, encoding="utf-8") as f:
+            j1 = json.load(f)
+        s1 = j1["judge_alone"]["all"]
+        data["judge_v1"] = {"model": j1["model"], "correct": s1["caught"] + (s1["honored_in_set"] - s1["false_alarms"])
+                            if s1["sent_to_review"] == 0 and s1["silent_misses"] == 0 else None,
+                            "cases": s1["cases"], "caught": s1["caught"], "violations": s1["violations_in_set"],
+                            "false_alarms": s1["false_alarms"], "honored": s1["honored_in_set"]}
     with open(os.path.join(ROOT, "demo", "data.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, indent=1)
     print("wrote demo/data.json:", len(out_cases), "cases")

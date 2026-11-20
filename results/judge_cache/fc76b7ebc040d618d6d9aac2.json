@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-07",
+ "reply": "{\"verdict\": \"violated\", \"evidence\": \"logger.info(\\\"login attempt user=%s password=%s\\\", user, password)\"}"
+}

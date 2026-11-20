@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-10",
+ "reply": "{\"verdict\": \"violated\", \"evidence\": \"The code uses secure_filename() but does not implement a check against a whitelist of allowed extensions as required by SR-10.\"}"
+}

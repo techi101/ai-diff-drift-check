@@ -1,0 +1,994 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "cases_file": "data/cases.jsonl",
+ "cache_tag": "v2",
+ "model_versions": [
+  "gemini-3.5-flash-lite"
+ ],
+ "temperature": 0,
+ "repeats": 3,
+ "stability": {
+  "all_cases_unanimous": 31,
+  "all_cases": 31,
+  "cascade_cases_unanimous": 7,
+  "cascade_cases": 7,
+  "total_calls": 93
+ },
+ "regex": {
+  "all": {
+   "cases": 31,
+   "violations_in_set": 17,
+   "caught": 11,
+   "false_alarms": 2,
+   "silent_misses": 1,
+   "sent_to_review": 7,
+   "precision": 0.846,
+   "recall": 0.647,
+   "accuracy_when_decided": 0.875,
+   "decided_share": 0.774,
+   "honored_in_set": 14,
+   "recall_ci95": [
+    0.413,
+    0.827
+   ],
+   "precision_ci95": [
+    0.578,
+    0.957
+   ],
+   "false_alarm_rate_ci95": [
+    0.04,
+    0.399
+   ]
+  },
+  "hard": {
+   "cases": 10,
+   "violations_in_set": 6,
+   "caught": 1,
+   "false_alarms": 2,
+   "silent_misses": 1,
+   "sent_to_review": 6,
+   "precision": 0.333,
+   "recall": 0.167,
+   "accuracy_when_decided": 0.25,
+   "decided_share": 0.4,
+   "honored_in_set": 4,
+   "recall_ci95": [
+    0.03,
+    0.564
+   ],
+   "precision_ci95": [
+    0.061,
+    0.792
+   ],
+   "false_alarm_rate_ci95": [
+    0.15,
+    0.85
+   ]
+  },
+  "plain": {
+   "cases": 21,
+   "violations_in_set": 11,
+   "caught": 10,
+   "false_alarms": 0,
+   "silent_misses": 0,
+   "sent_to_review": 1,
+   "precision": 1.0,
+   "recall": 0.909,
+   "accuracy_when_decided": 1.0,
+   "decided_share": 0.952,
+   "honored_in_set": 10,
+   "recall_ci95": [
+    0.623,
+    0.984
+   ],
+   "precision_ci95": [
+    0.722,
+    1.0
+   ],
+   "false_alarm_rate_ci95": [
+    0.0,
+    0.278
+   ]
+  }
+ },
+ "cascade": {
+  "all": {
+   "cases": 31,
+   "violations_in_set": 17,
+   "caught": 16,
+   "false_alarms": 2,
+   "silent_misses": 1,
+   "sent_to_review": 0,
+   "precision": 0.889,
+   "recall": 0.941,
+   "accuracy_when_decided": 0.903,
+   "decided_share": 1.0,
+   "honored_in_set": 14,
+   "recall_ci95": [
+    0.73,
+    0.99
+   ],
+   "precision_ci95": [
+    0.672,
+    0.969
+   ],
+   "false_alarm_rate_ci95": [
+    0.04,
+    0.399
+   ]
+  },
+  "hard": {
+   "cases": 10,
+   "violations_in_set": 6,
+   "caught": 5,
+   "false_alarms": 2,
+   "silent_misses": 1,
+   "sent_to_review": 0,
+   "precision": 0.714,
+   "recall": 0.833,
+   "accuracy_when_decided": 0.7,
+   "decided_share": 1.0,
+   "honored_in_set": 4,
+   "recall_ci95": [
+    0.436,
+    0.97
+   ],
+   "precision_ci95": [
+    0.359,
+    0.918
+   ],
+   "false_alarm_rate_ci95": [
+    0.15,
+    0.85
+   ]
+  },
+  "plain": {
+   "cases": 21,
+   "violations_in_set": 11,
+   "caught": 11,
+   "false_alarms": 0,
+   "silent_misses": 0,
+   "sent_to_review": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "accuracy_when_decided": 1.0,
+   "decided_share": 1.0,
+   "honored_in_set": 10,
+   "recall_ci95": [
+    0.741,
+    1.0
+   ],
+   "precision_ci95": [
+    0.741,
+    1.0
+   ],
+   "false_alarm_rate_ci95": [
+    0.0,
+    0.278
+   ]
+  }
+ },
+ "judge_alone": {
+  "all": {
+   "cases": 31,
+   "violations_in_set": 17,
+   "caught": 17,
+   "false_alarms": 0,
+   "silent_misses": 0,
+   "sent_to_review": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "accuracy_when_decided": 1.0,
+   "decided_share": 1.0,
+   "honored_in_set": 14,
+   "recall_ci95": [
+    0.816,
+    1.0
+   ],
+   "precision_ci95": [
+    0.816,
+    1.0
+   ],
+   "false_alarm_rate_ci95": [
+    0.0,
+    0.215
+   ]
+  },
+  "hard": {
+   "cases": 10,
+   "violations_in_set": 6,
+   "caught": 6,
+   "false_alarms": 0,
+   "silent_misses": 0,
+   "sent_to_review": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "accuracy_when_decided": 1.0,
+   "decided_share": 1.0,
+   "honored_in_set": 4,
+   "recall_ci95": [
+    0.61,
+    1.0
+   ],
+   "precision_ci95": [
+    0.61,
+    1.0
+   ],
+   "false_alarm_rate_ci95": [
+    0.0,
+    0.49
+   ]
+  },
+  "plain": {
+   "cases": 21,
+   "violations_in_set": 11,
+   "caught": 11,
+   "false_alarms": 0,
+   "silent_misses": 0,
+   "sent_to_review": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "accuracy_when_decided": 1.0,
+   "decided_share": 1.0,
+   "honored_in_set": 10,
+   "recall_ci95": [
+    0.741,
+    1.0
+   ],
+   "precision_ci95": [
+    0.741,
+    1.0
+   ],
+   "false_alarm_rate_ci95": [
+    0.0,
+    0.278
+   ]
+  }
+ },
+ "per_case": {
+  "sr01-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "digest = hashlib.sha256(password.encode()).hexdigest()",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "digest = hashlib.sha256(password.encode()).hexdigest()",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "digest = hashlib.sha256(password.encode()).hexdigest()",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "digest = hashlib.sha256(password.encode()).hexdigest()",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr01-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr01-plain-bad2": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "user.password = request.form['password']",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "user.password = request.form['password']",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "user.password = request.form['password']",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "user.password = request.form['password']",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr01-hard-helper": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "db.insert_user(username, quick_digest(password))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "db.insert_user(username, quick_digest(password))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "db.insert_user(username, quick_digest(password))",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "db.insert_user(username, quick_digest(password))",
+   "cascade": "violated",
+   "cascade_stage": "judge"
+  },
+  "sr02-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr02-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr02-hard-indirect": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"",
+   "cascade": "violated",
+   "cascade_stage": "judge"
+  },
+  "sr03-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "api_key = \"sk_live_51HxQ2bExampleExample\"",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "api_key = \"sk_live_51HxQ2bExampleExample\"",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "api_key = \"sk_live_51HxQ2bExampleExample\"",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "api_key = \"sk_live_51HxQ2bExampleExample\"",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr03-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "api_key = os.environ[\"STRIPE_API_KEY\"]",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "api_key = os.environ[\"STRIPE_API_KEY\"]",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "api_key = os.environ[\"STRIPE_API_KEY\"]",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "api_key = os.environ[\"STRIPE_API_KEY\"]",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr03-hard-testfixture": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "token = \"test_token_123456\"",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "token = \"test_token_123456\"",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "token = \"test_token_123456\"",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "token = \"test_token_123456\"",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr04-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "resp.set_cookie('session', sid)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "resp.set_cookie('session', sid)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "resp.set_cookie('session', sid)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "resp.set_cookie('session', sid)",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr04-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr04-hard-partial": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "resp.set_cookie('session', sid, httponly=True, secure=True)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "resp.set_cookie('session', sid, httponly=True, secure=True)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "resp.set_cookie('session', sid, httponly=True, secure=True)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True)",
+   "cascade": "violated",
+   "cascade_stage": "judge"
+  },
+  "sr05-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr05-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "r = requests.get(PARTNER_URL, timeout=5)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "r = requests.get(PARTNER_URL, timeout=5)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "r = requests.get(PARTNER_URL, timeout=5)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "r = requests.get(PARTNER_URL, timeout=5)",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr05-hard-session": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "s.verify = False",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "s.verify = False",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "s.verify = False",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "s.verify = False",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr06-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr06-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr06-hard-varalgs": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
+   "cascade": "honored",
+   "cascade_stage": "judge"
+  },
+  "sr07-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "logger.info(\"login attempt user=%s password=%s\", user, password)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "logger.info(\"login attempt user=%s password=%s\", user, password)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "logger.info(\"login attempt user=%s password=%s\", user, password)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "logger.info(\"login attempt user=%s password=%s\", user, password)",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr07-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "logger.info(\"login attempt user=%s\", user)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "logger.info(\"login attempt user=%s\", user)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "logger.info(\"login attempt user=%s\", user)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "logger.info(\"login attempt user=%s\", user)",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr07-hard-headers": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr07-hard-falsealarm": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr08-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "inv = Invoice.query.get_or_404(invoice_id)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "inv = Invoice.query.get_or_404(invoice_id)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "inv = Invoice.query.get_or_404(invoice_id)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "inv = Invoice.query.get_or_404(invoice_id)",
+   "cascade": "violated",
+   "cascade_stage": "judge"
+  },
+  "sr08-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr08-hard-helper": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "inv = load_owned(Invoice, invoice_id)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "inv = load_owned(Invoice, invoice_id)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "inv = load_owned(Invoice, invoice_id)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "inv = load_owned(Invoice, invoice_id)",
+   "cascade": "honored",
+   "cascade_stage": "judge"
+  },
+  "sr09-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "@app.route('/login', methods=['POST'])",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "@app.route('/login', methods=['POST'])",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "@app.route('/login', methods=['POST'])",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "@app.route('/login', methods=['POST'])",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr09-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "@limiter.limit(\"5 per minute\")",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "@limiter.limit(\"5 per minute\")",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "@limiter.limit(\"5 per minute\")",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "@limiter.limit(\"5 per minute\")",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr10-plain-bad": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
+   "cascade": "violated",
+   "cascade_stage": "rules"
+  },
+  "sr10-plain-ok": {
+   "runs": [
+    {
+     "verdict": "honored",
+     "evidence": "if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "honored",
+     "evidence": "if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "honored",
+   "judge_alone_why": "if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
+   "cascade": "honored",
+   "cascade_stage": "rules"
+  },
+  "sr10-hard-noext": {
+   "runs": [
+    {
+     "verdict": "violated",
+     "evidence": "name = secure_filename(f.filename)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "name = secure_filename(f.filename)",
+     "model_version": "gemini-3.5-flash-lite"
+    },
+    {
+     "verdict": "violated",
+     "evidence": "name = secure_filename(f.filename)",
+     "model_version": "gemini-3.5-flash-lite"
+    }
+   ],
+   "unanimous": true,
+   "judge_alone": "violated",
+   "judge_alone_why": "name = secure_filename(f.filename)",
+   "cascade": "violated",
+   "cascade_stage": "judge"
+  }
+ }
+}

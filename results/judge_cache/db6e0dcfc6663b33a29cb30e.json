@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 0,
+ "req_id": "SR-06",
+ "reply": "{\"verdict\": \"honored\", \"evidence\": \"claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\\\"RS256\\\"])\"}"
+}

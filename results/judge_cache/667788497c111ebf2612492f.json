@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 0,
+ "req_id": "SR-07",
+ "reply": "{\"verdict\": \"violated\", \"evidence\": \"logger.debug(\\\"incoming request headers: %s\\\", dict(request.headers))\"}"
+}

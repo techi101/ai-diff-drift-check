@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 1,
+ "req_id": "SR-04",
+ "reply": "{\"verdict\": \"violated\", \"evidence\": \"resp.set_cookie('session', sid)\"}"
+}

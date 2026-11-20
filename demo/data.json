@@ -85,17 +85,31 @@
    "drift_match": "hashlib.sha256",
    "drift_note": "Password stored with a fast SHA256 hash, not bcrypt or argon2.",
    "regex_evidence": "hashlib.sha256(pass",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "digest = hashlib.sha256(password.encode()).hexdigest()",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "digest = hashlib.sha256(password.encode()).hexdigest()",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "digest = hashlib.sha256(password.encode()).hexdigest()",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-01: User passwords must be stored only as salted hashes (bcrypt or argon2). Fast hashes like MD5/SHA-1/SHA-256 or plain text are not allowed.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+import hashlib\n+def register(username, password):\n+    digest = hashlib.sha256(password.encode()).hexdigest()\n+    db.insert_user(username, digest)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -112,17 +126,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-01: User passwords must be stored only as salted hashes (bcrypt or argon2). Fast hashes like MD5/SHA-1/SHA-256 or plain text are not allowed.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+import bcrypt\n+def register(username, password):\n+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())\n+    db.insert_user(username, hashed)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -139,17 +167,31 @@
    "drift_match": "user.password =",
    "drift_note": "Raw form password saved straight onto the user.",
    "regex_evidence": ".password = request.form[",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "user.password = request.form['password']",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "user.password = request.form['password']",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "user.password = request.form['password']",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-01: User passwords must be stored only as salted hashes (bcrypt or argon2). Fast hashes like MD5/SHA-1/SHA-256 or plain text are not allowed.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/signup', methods=['POST'])\n+def signup():\n+    user = User(email=request.form['email'])\n+    user.password = request.form['password']\n+    db.session.add(user)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -162,22 +204,36 @@
    "stage": "judge",
    "why": "offline judge (no model call)",
    "outcome": "review_violation",
-   "diff": "--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+from .util import quick_digest  # wraps hashlib.md5\n+def register(username, password):\n+    db.insert_user(username, quick_digest(password))\n",
+   "diff": "--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+from .util import quick_digest\n+def register(username, password):\n+    db.insert_user(username, quick_digest(password))\n",
    "drift_match": "quick_digest(password)",
    "drift_note": "quick_digest wraps MD5, hidden behind a helper import.",
    "regex_evidence": null,
-   "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-01: User passwords must be stored only as salted hashes (bcrypt or argon2). Fast hashes like MD5/SHA-1/SHA-256 or plain text are not allowed.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+from .util import quick_digest  # wraps hashlib.md5\n+def register(username, password):\n+    db.insert_user(username, quick_digest(password))\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "db.insert_user(username, quick_digest(password))",
-    "cascade": "violated",
-    "cascade_stage": "judge",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-01: User passwords must be stored only as salted hashes (bcrypt or argon2). Fast hashes like MD5/SHA-1/SHA-256 or plain text are not allowed.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+from .util import quick_digest\n+def register(username, password):\n+    db.insert_user(username, quick_digest(password))\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "db.insert_user(username, quick_digest(password))",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "db.insert_user(username, quick_digest(password))",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    }
   },
   {
@@ -193,17 +249,31 @@
    "drift_match": "cur.execute(f",
    "drift_note": "User input formatted into the SQL string with an f string.",
    "regex_evidence": ".execute(f\"",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-02: All database queries must use parameterized statements. No string formatting or concatenation into SQL.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+def find_user(cur, email):\n+    cur.execute(f\"SELECT * FROM users WHERE email = '{email}'\")\n+    return cur.fetchone()\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -220,17 +290,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-02: All database queries must use parameterized statements. No string formatting or concatenation into SQL.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+def find_user(cur, email):\n+    cur.execute(\"SELECT * FROM users WHERE email = ?\", (email,))\n+    return cur.fetchone()\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -248,17 +332,31 @@
    "drift_note": "SQL built by concatenation in a variable, then executed.",
    "regex_evidence": null,
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-02: All database queries must use parameterized statements. No string formatting or concatenation into SQL.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+def search(cur, term):\n+    q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"\n+    cur.execute(q)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"",
-    "cascade": "violated",
-    "cascade_stage": "judge",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%'\"",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "q = \"SELECT * FROM items WHERE name LIKE '%\" + term + \"%\"\"",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    }
   },
   {
@@ -274,17 +372,31 @@
    "drift_match": "sk_live",
    "drift_note": "Live API key written into source.",
    "regex_evidence": "api_key = \"sk_live_51HxQ2bExampleExample\"",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "api_key = \"sk_live_51HxQ2bExampleExample\"",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "api_key = \"sk_live_51HxQ2bExampleExample\"",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "api_key = \"sk_live_51HxQ2bExampleExample\"",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-03: Secrets (API keys, tokens, DB passwords) must come from the environment or a secrets manager, never be hardcoded.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+STRIPE_API_KEY = None\n+api_key = \"sk_live_51HxQ2bExampleExample\"\n+client = Stripe(api_key)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -301,17 +413,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "api_key = os.environ[\"STRIPE_API_KEY\"]",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "api_key = os.environ[\"STRIPE_API_KEY\"]",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "api_key = os.environ[\"STRIPE_API_KEY\"]",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-03: Secrets (API keys, tokens, DB passwords) must come from the environment or a secrets manager, never be hardcoded.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+import os\n+api_key = os.environ[\"STRIPE_API_KEY\"]\n+client = Stripe(api_key)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -322,25 +448,39 @@
    "label": "honored",
    "pred": "violated",
    "stage": "rules",
-   "why": "matched bad pattern: token = \"test_token_not_real_123456\"",
+   "why": "matched bad pattern: token = \"test_token_123456\"",
    "outcome": "false_alarm",
-   "diff": "--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+# tests/test_client.py: fake value, never a real key\n+token = \"test_token_not_real_123456\"\n+assert parse(token) is None\n",
+   "diff": "--- a/tests/test_client.py\n+++ b/tests/test_client.py\n@@ -1,1 +1,1 @@\n+token = \"test_token_123456\"\n+assert parse(token) is None\n",
    "drift_match": null,
    "drift_note": null,
-   "regex_evidence": "token = \"test_token_not_real_123456\"",
-   "judge": {
-    "alone": "honored",
-    "alone_why": "token = \"test_token_not_real_123456\"",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "regex_evidence": "token = \"test_token_123456\"",
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "token = \"test_token_123456\"",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "token = \"test_token_123456\"",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
-   "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-03: Secrets (API keys, tokens, DB passwords) must come from the environment or a secrets manager, never be hardcoded.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+# tests/test_client.py: fake value, never a real key\n+token = \"test_token_not_real_123456\"\n+assert parse(token) is None\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
+   "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-03: Secrets (API keys, tokens, DB passwords) must come from the environment or a secrets manager, never be hardcoded.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/tests/test_client.py\n+++ b/tests/test_client.py\n@@ -1,1 +1,1 @@\n+token = \"test_token_123456\"\n+assert parse(token) is None\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
   {
    "id": "sr04-plain-bad",
@@ -355,17 +495,31 @@
    "drift_match": "set_cookie(",
    "drift_note": "Session cookie set with no HttpOnly, Secure or SameSite.",
    "regex_evidence": "set_cookie('session', sid)",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "resp.set_cookie('session', sid)",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "resp.set_cookie('session', sid)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "resp.set_cookie('session', sid)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-04: Session cookies must be set with HttpOnly, Secure and SameSite.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+resp = make_response(redirect('/home'))\n+resp.set_cookie('session', sid)\n+return resp\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -382,17 +536,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-04: Session cookies must be set with HttpOnly, Secure and SameSite.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+resp = make_response(redirect('/home'))\n+resp.set_cookie('session', sid, httponly=True, secure=True, samesite='Lax')\n+return resp\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -410,17 +578,31 @@
    "drift_note": "HttpOnly and Secure are set, SameSite is missing.",
    "regex_evidence": null,
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-04: Session cookies must be set with HttpOnly, Secure and SameSite.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+resp.set_cookie('session', sid, httponly=True, secure=True)\n+return resp\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True)",
-    "cascade": "violated",
-    "cascade_stage": "judge",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True)",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "resp.set_cookie('session', sid, httponly=True, secure=True)",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    }
   },
   {
@@ -436,17 +618,31 @@
    "drift_match": "verify=False",
    "drift_note": "Certificate checks turned off on the outbound call.",
    "regex_evidence": "verify=False",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "r = requests.get(PARTNER_URL, timeout=5, verify=False)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-05: Outbound HTTPS calls must verify TLS certificates.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+r = requests.get(PARTNER_URL, timeout=5, verify=False)\n+return r.json()\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -463,17 +659,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "r = requests.get(PARTNER_URL, timeout=5)",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "r = requests.get(PARTNER_URL, timeout=5)",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "r = requests.get(PARTNER_URL, timeout=5)",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-05: Outbound HTTPS calls must verify TLS certificates.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+r = requests.get(PARTNER_URL, timeout=5)\n+return r.json()\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -490,17 +700,31 @@
    "drift_match": "s.verify = False",
    "drift_note": "Certificate checks turned off on the whole session.",
    "regex_evidence": "verify = False",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "s.verify = False",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "s.verify = False",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "s.verify = False",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-05: Outbound HTTPS calls must verify TLS certificates.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+s = requests.Session()\n+s.verify = False\n+r = s.get(PARTNER_URL)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -517,17 +741,31 @@
    "drift_match": "verify_signature",
    "drift_note": "JWT decoded with signature verification switched off.",
    "regex_evidence": "verify_signature\": False",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "claims = jwt.decode(token, options={\"verify_signature\": False})",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "claims = jwt.decode(token, options={\"verify_signature\": False})",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-06: JWTs must be verified with an explicit allow-list of algorithms; signature verification must never be turned off.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+claims = jwt.decode(token, options={\"verify_signature\": False})\n+user_id = claims['sub']\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -544,17 +782,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-06: JWTs must be verified with an explicit allow-list of algorithms; signature verification must never be turned off.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+claims = jwt.decode(token, PUBLIC_KEY, algorithms=[\"RS256\"])\n+user_id = claims['sub']\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -572,17 +824,31 @@
    "drift_note": null,
    "regex_evidence": null,
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-06: JWTs must be verified with an explicit allow-list of algorithms; signature verification must never be turned off.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+ALLOWED_ALGS = [\"RS256\"]\n+claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "honored",
-    "alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
-    "cascade": "honored",
-    "cascade_stage": "judge",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
+     "cascade": "honored",
+     "cascade_stage": "judge",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "claims = jwt.decode(token, PUBLIC_KEY, algorithms=ALLOWED_ALGS)",
+     "cascade": "honored",
+     "cascade_stage": "judge",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    }
   },
   {
@@ -598,17 +864,31 @@
    "drift_match": "logger.info",
    "drift_note": "Password written to the log line.",
    "regex_evidence": "logger.info(\"login attempt user=%s password=%s\", user, password",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "logger.info(\"login attempt user=%s password=%s\", user, password)",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "logger.info(\"login attempt user=%s password=%s\", user, password)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "logger.info(\"login attempt user=%s password=%s\", user, password)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-07: Passwords, tokens and auth headers must never be written to logs.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+logger.info(\"login attempt user=%s password=%s\", user, password)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -625,17 +905,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "logger.info(\"login attempt user=%s\", user)",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "logger.info(\"login attempt user=%s\", user)",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "logger.info(\"login attempt user=%s\", user)",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-07: Passwords, tokens and auth headers must never be written to logs.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+logger.info(\"login attempt user=%s\", user)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -652,17 +946,31 @@
    "drift_match": "logger.debug",
    "drift_note": "All request headers logged, which includes Authorization.",
    "regex_evidence": null,
-   "judge": {
-    "alone": "violated",
-    "alone_why": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "logger.debug(\"incoming request headers: %s\", dict(request.headers))",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-07: Passwords, tokens and auth headers must never be written to logs.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+logger.debug(\"incoming request headers: %s\", dict(request.headers))\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -679,17 +987,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": "logger.warning(\"password",
-   "judge": {
-    "alone": "honored",
-    "alone_why": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "logger.warning(\"password reset link expired for user_id=%s\", uid)",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-07: Passwords, tokens and auth headers must never be written to logs.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+logger.warning(\"password reset link expired for user_id=%s\", uid)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -707,17 +1029,31 @@
    "drift_note": "Invoice loaded by id with no check that it belongs to the caller.",
    "regex_evidence": null,
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-08: Any endpoint that loads an invoice by id must check the invoice belongs to the logged-in user (no IDOR).\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/invoices/<int:invoice_id>')\n+@login_required\n+def get_invoice(invoice_id):\n+    inv = Invoice.query.get_or_404(invoice_id)\n+    return jsonify(inv.to_dict())\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "inv = Invoice.query.get_or_404(invoice_id)",
-    "cascade": "violated",
-    "cascade_stage": "judge",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "inv = Invoice.query.get_or_404(invoice_id)",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "inv = Invoice.query.get_or_404(invoice_id)",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    }
   },
   {
@@ -733,17 +1069,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-08: Any endpoint that loads an invoice by id must check the invoice belongs to the logged-in user (no IDOR).\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/invoices/<int:invoice_id>')\n+@login_required\n+def get_invoice(invoice_id):\n+    inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()\n+    return jsonify(inv.to_dict())\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -756,22 +1106,36 @@
    "stage": "judge",
    "why": "offline judge (no model call)",
    "outcome": "review_ok",
-   "diff": "--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/invoices/<int:invoice_id>/pdf')\n+@login_required\n+def invoice_pdf(invoice_id):\n+    inv = load_owned(Invoice, invoice_id)  # aborts 404 if not the caller's\n+    return render_pdf(inv)\n",
+   "diff": "--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/invoices/<int:invoice_id>/pdf')\n+@login_required\n+def invoice_pdf(invoice_id):\n+    inv = load_owned(Invoice, invoice_id)\n+    return render_pdf(inv)\n",
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-08: Any endpoint that loads an invoice by id must check the invoice belongs to the logged-in user (no IDOR).\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/invoices/<int:invoice_id>/pdf')\n+@login_required\n+def invoice_pdf(invoice_id):\n+    inv = load_owned(Invoice, invoice_id)  # aborts 404 if not the caller's\n+    return render_pdf(inv)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "honored",
-    "alone_why": "inv = load_owned(Invoice, invoice_id)  # aborts 404 if not the caller's",
-    "cascade": "honored",
-    "cascade_stage": "judge",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-08: Any endpoint that loads an invoice by id must check the invoice belongs to the logged-in user (no IDOR).\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/invoices/<int:invoice_id>/pdf')\n+@login_required\n+def invoice_pdf(invoice_id):\n+    inv = load_owned(Invoice, invoice_id)\n+    return render_pdf(inv)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "inv = load_owned(Invoice, invoice_id)",
+     "cascade": "honored",
+     "cascade_stage": "judge",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "inv = load_owned(Invoice, invoice_id)",
+     "cascade": "honored",
+     "cascade_stage": "judge",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    }
   },
   {
@@ -787,17 +1151,31 @@
    "drift_match": "@app.route('/login'",
    "drift_note": "Login route added with no rate limiter.",
    "regex_evidence": "route('/login', methods=['POST'])",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "@app.route('/login', methods=['POST'])",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "@app.route('/login', methods=['POST'])",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "@app.route('/login', methods=['POST'])",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-09: The login endpoint must be rate limited.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/login', methods=['POST'])\n+def login():\n+    return do_login(request.form)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -814,17 +1192,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "@limiter.limit(\"5 per minute\")",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "@limiter.limit(\"5 per minute\")",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "@limiter.limit(\"5 per minute\")",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-09: The login endpoint must be rate limited.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+@app.route('/login', methods=['POST'])\n+@limiter.limit(\"5 per minute\")\n+def login():\n+    return do_login(request.form)\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -841,17 +1233,31 @@
    "drift_match": "f.save(",
    "drift_note": "Upload saved under the client supplied filename.",
    "regex_evidence": ".save(os.path.join(UPLOAD_DIR, f.filename)",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
-    "cascade": "violated",
-    "cascade_stage": "rules",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "f.save(os.path.join(UPLOAD_DIR, f.filename))",
+     "cascade": "violated",
+     "cascade_stage": "rules",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-10: File uploads must sanitise the filename and allow only listed extensions.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+f = request.files['avatar']\n+f.save(os.path.join(UPLOAD_DIR, f.filename))\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -868,17 +1274,31 @@
    "drift_match": null,
    "drift_note": null,
    "regex_evidence": null,
-   "judge": {
-    "alone": "honored",
-    "alone_why": "if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
-    "cascade": "honored",
-    "cascade_stage": "rules",
-    "runs": [
-     "honored",
-     "honored",
-     "honored"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "honored",
+     "alone_why": "if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "honored",
+     "alone_why": "name = secure_filename(f.filename) and if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)",
+     "cascade": "honored",
+     "cascade_stage": "rules",
+     "runs": [
+      "honored",
+      "honored",
+      "honored"
+     ],
+     "unanimous": true
+    }
    },
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-10: File uploads must sanitise the filename and allow only listed extensions.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+ALLOWED_EXT = {'png', 'jpg'}\n+f = request.files['avatar']\n+name = secure_filename(f.filename)\n+if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)\n+f.save(os.path.join(UPLOAD_DIR, name))\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide."
   },
@@ -896,17 +1316,31 @@
    "drift_note": "Filename is sanitised but there is no extension allow list.",
    "regex_evidence": null,
    "judge_prompt": "You are checking whether a code change honors ONE security requirement\nfrom a security design review.\n\nRequirement SR-10: File uploads must sanitise the filename and allow only listed extensions.\n\nCode diff (only '+' lines are new code):\n```diff\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n+f = request.files['avatar']\n+name = secure_filename(f.filename)\n+f.save(os.path.join(UPLOAD_DIR, name))\n```\n\nAnswer with JSON only, no prose:\n{\"verdict\": \"honored\" | \"violated\" | \"unknown\", \"evidence\": \"<the line that decides it>\"}\nUse \"unknown\" if the diff does not contain enough code to decide.",
-   "judge": {
-    "alone": "violated",
-    "alone_why": "name = secure_filename(f.filename)",
-    "cascade": "violated",
-    "cascade_stage": "judge",
-    "runs": [
-     "violated",
-     "violated",
-     "violated"
-    ],
-    "unanimous": true
+   "judges": {
+    "gemini-3.5-flash-lite": {
+     "alone": "violated",
+     "alone_why": "name = secure_filename(f.filename)",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    },
+    "gemini-3.1-flash-lite": {
+     "alone": "violated",
+     "alone_why": "The code uses secure_filename() but does not implement a check against a whitelist of allowed extensions as required by SR-10.",
+     "cascade": "violated",
+     "cascade_stage": "judge",
+     "runs": [
+      "violated",
+      "violated",
+      "violated"
+     ],
+     "unanimous": true
+    }
    }
   }
  ],
@@ -950,19 +1384,54 @@
  },
  "judge": {
   "run": true,
-  "model": "gemini-3.5-flash-lite",
-  "model_versions": [
-   "gemini-3.5-flash-lite"
-  ],
   "temperature": 0,
   "repeats": 3,
-  "stability": {
-   "all_cases_unanimous": 31,
-   "all_cases": 31,
-   "cascade_cases_unanimous": 7,
-   "cascade_cases": 7,
-   "total_calls": 93
-  }
+  "models": [
+   {
+    "model": "gemini-3.5-flash-lite",
+    "short": "3.5 Flash Lite",
+    "versions": [
+     "gemini-3.5-flash-lite"
+    ],
+    "stability": {
+     "all_cases_unanimous": 31,
+     "all_cases": 31,
+     "cascade_cases_unanimous": 7,
+     "cascade_cases": 7,
+     "total_calls": 93
+    },
+    "alone_wrong": [],
+    "cascade_wrong": [
+     "sr03-hard-testfixture",
+     "sr07-hard-headers",
+     "sr07-hard-falsealarm"
+    ]
+   },
+   {
+    "model": "gemini-3.1-flash-lite",
+    "short": "3.1 Flash Lite",
+    "versions": [
+     "gemini-3.1-flash-lite"
+    ],
+    "stability": {
+     "all_cases_unanimous": 31,
+     "all_cases": 31,
+     "cascade_cases_unanimous": 7,
+     "cascade_cases": 7,
+     "total_calls": 93
+    },
+    "alone_wrong": [
+     "sr03-hard-testfixture",
+     "sr05-plain-ok"
+    ],
+    "cascade_wrong": [
+     "sr03-hard-testfixture",
+     "sr07-hard-headers",
+     "sr07-hard-falsealarm"
+    ]
+   }
+  ],
+  "models_agree": 29
  },
  "systems": {
   "regex": {
@@ -1042,159 +1511,326 @@
     ]
    }
   },
-  "cascade": {
-   "all": {
-    "cases": 31,
-    "violations_in_set": 17,
-    "caught": 16,
-    "false_alarms": 2,
-    "silent_misses": 1,
-    "sent_to_review": 0,
-    "precision": 0.889,
-    "recall": 0.941,
-    "accuracy_when_decided": 0.903,
-    "decided_share": 1.0,
-    "honored_in_set": 14,
-    "recall_ci95": [
-     0.73,
-     0.99
-    ],
-    "precision_ci95": [
-     0.672,
-     0.969
-    ],
-    "false_alarm_rate_ci95": [
-     0.04,
-     0.399
-    ]
+  "gemini-3.5-flash-lite": {
+   "cascade": {
+    "all": {
+     "cases": 31,
+     "violations_in_set": 17,
+     "caught": 16,
+     "false_alarms": 2,
+     "silent_misses": 1,
+     "sent_to_review": 0,
+     "precision": 0.889,
+     "recall": 0.941,
+     "accuracy_when_decided": 0.903,
+     "decided_share": 1.0,
+     "honored_in_set": 14,
+     "recall_ci95": [
+      0.73,
+      0.99
+     ],
+     "precision_ci95": [
+      0.672,
+      0.969
+     ],
+     "false_alarm_rate_ci95": [
+      0.04,
+      0.399
+     ]
+    },
+    "hard": {
+     "cases": 10,
+     "violations_in_set": 6,
+     "caught": 5,
+     "false_alarms": 2,
+     "silent_misses": 1,
+     "sent_to_review": 0,
+     "precision": 0.714,
+     "recall": 0.833,
+     "accuracy_when_decided": 0.7,
+     "decided_share": 1.0,
+     "honored_in_set": 4,
+     "recall_ci95": [
+      0.436,
+      0.97
+     ],
+     "precision_ci95": [
+      0.359,
+      0.918
+     ],
+     "false_alarm_rate_ci95": [
+      0.15,
+      0.85
+     ]
+    },
+    "plain": {
+     "cases": 21,
+     "violations_in_set": 11,
+     "caught": 11,
+     "false_alarms": 0,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 1.0,
+     "recall": 1.0,
+     "accuracy_when_decided": 1.0,
+     "decided_share": 1.0,
+     "honored_in_set": 10,
+     "recall_ci95": [
+      0.741,
+      1.0
+     ],
+     "precision_ci95": [
+      0.741,
+      1.0
+     ],
+     "false_alarm_rate_ci95": [
+      0.0,
+      0.278
+     ]
+    }
    },
-   "hard": {
-    "cases": 10,
-    "violations_in_set": 6,
-    "caught": 5,
-    "false_alarms": 2,
-    "silent_misses": 1,
-    "sent_to_review": 0,
-    "precision": 0.714,
-    "recall": 0.833,
-    "accuracy_when_decided": 0.7,
-    "decided_share": 1.0,
-    "honored_in_set": 4,
-    "recall_ci95": [
-     0.436,
-     0.97
-    ],
-    "precision_ci95": [
-     0.359,
-     0.918
-    ],
-    "false_alarm_rate_ci95": [
-     0.15,
-     0.85
-    ]
-   },
-   "plain": {
-    "cases": 21,
-    "violations_in_set": 11,
-    "caught": 11,
-    "false_alarms": 0,
-    "silent_misses": 0,
-    "sent_to_review": 0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "accuracy_when_decided": 1.0,
-    "decided_share": 1.0,
-    "honored_in_set": 10,
-    "recall_ci95": [
-     0.741,
-     1.0
-    ],
-    "precision_ci95": [
-     0.741,
-     1.0
-    ],
-    "false_alarm_rate_ci95": [
-     0.0,
-     0.278
-    ]
+   "judge_alone": {
+    "all": {
+     "cases": 31,
+     "violations_in_set": 17,
+     "caught": 17,
+     "false_alarms": 0,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 1.0,
+     "recall": 1.0,
+     "accuracy_when_decided": 1.0,
+     "decided_share": 1.0,
+     "honored_in_set": 14,
+     "recall_ci95": [
+      0.816,
+      1.0
+     ],
+     "precision_ci95": [
+      0.816,
+      1.0
+     ],
+     "false_alarm_rate_ci95": [
+      0.0,
+      0.215
+     ]
+    },
+    "hard": {
+     "cases": 10,
+     "violations_in_set": 6,
+     "caught": 6,
+     "false_alarms": 0,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 1.0,
+     "recall": 1.0,
+     "accuracy_when_decided": 1.0,
+     "decided_share": 1.0,
+     "honored_in_set": 4,
+     "recall_ci95": [
+      0.61,
+      1.0
+     ],
+     "precision_ci95": [
+      0.61,
+      1.0
+     ],
+     "false_alarm_rate_ci95": [
+      0.0,
+      0.49
+     ]
+    },
+    "plain": {
+     "cases": 21,
+     "violations_in_set": 11,
+     "caught": 11,
+     "false_alarms": 0,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 1.0,
+     "recall": 1.0,
+     "accuracy_when_decided": 1.0,
+     "decided_share": 1.0,
+     "honored_in_set": 10,
+     "recall_ci95": [
+      0.741,
+      1.0
+     ],
+     "precision_ci95": [
+      0.741,
+      1.0
+     ],
+     "false_alarm_rate_ci95": [
+      0.0,
+      0.278
+     ]
+    }
    }
   },
-  "judge_alone": {
-   "all": {
-    "cases": 31,
-    "violations_in_set": 17,
-    "caught": 17,
-    "false_alarms": 0,
-    "silent_misses": 0,
-    "sent_to_review": 0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "accuracy_when_decided": 1.0,
-    "decided_share": 1.0,
-    "honored_in_set": 14,
-    "recall_ci95": [
-     0.816,
-     1.0
-    ],
-    "precision_ci95": [
-     0.816,
-     1.0
-    ],
-    "false_alarm_rate_ci95": [
-     0.0,
-     0.215
-    ]
+  "gemini-3.1-flash-lite": {
+   "cascade": {
+    "all": {
+     "cases": 31,
+     "violations_in_set": 17,
+     "caught": 16,
+     "false_alarms": 2,
+     "silent_misses": 1,
+     "sent_to_review": 0,
+     "precision": 0.889,
+     "recall": 0.941,
+     "accuracy_when_decided": 0.903,
+     "decided_share": 1.0,
+     "honored_in_set": 14,
+     "recall_ci95": [
+      0.73,
+      0.99
+     ],
+     "precision_ci95": [
+      0.672,
+      0.969
+     ],
+     "false_alarm_rate_ci95": [
+      0.04,
+      0.399
+     ]
+    },
+    "hard": {
+     "cases": 10,
+     "violations_in_set": 6,
+     "caught": 5,
+     "false_alarms": 2,
+     "silent_misses": 1,
+     "sent_to_review": 0,
+     "precision": 0.714,
+     "recall": 0.833,
+     "accuracy_when_decided": 0.7,
+     "decided_share": 1.0,
+     "honored_in_set": 4,
+     "recall_ci95": [
+      0.436,
+      0.97
+     ],
+     "precision_ci95": [
+      0.359,
+      0.918
+     ],
+     "false_alarm_rate_ci95": [
+      0.15,
+      0.85
+     ]
+    },
+    "plain": {
+     "cases": 21,
+     "violations_in_set": 11,
+     "caught": 11,
+     "false_alarms": 0,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 1.0,
+     "recall": 1.0,
+     "accuracy_when_decided": 1.0,
+     "decided_share": 1.0,
+     "honored_in_set": 10,
+     "recall_ci95": [
+      0.741,
+      1.0
+     ],
+     "precision_ci95": [
+      0.741,
+      1.0
+     ],
+     "false_alarm_rate_ci95": [
+      0.0,
+      0.278
+     ]
+    }
    },
-   "hard": {
-    "cases": 10,
-    "violations_in_set": 6,
-    "caught": 6,
-    "false_alarms": 0,
-    "silent_misses": 0,
-    "sent_to_review": 0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "accuracy_when_decided": 1.0,
-    "decided_share": 1.0,
-    "honored_in_set": 4,
-    "recall_ci95": [
-     0.61,
-     1.0
-    ],
-    "precision_ci95": [
-     0.61,
-     1.0
-    ],
-    "false_alarm_rate_ci95": [
-     0.0,
-     0.49
-    ]
-   },
-   "plain": {
-    "cases": 21,
-    "violations_in_set": 11,
-    "caught": 11,
-    "false_alarms": 0,
-    "silent_misses": 0,
-    "sent_to_review": 0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "accuracy_when_decided": 1.0,
-    "decided_share": 1.0,
-    "honored_in_set": 10,
-    "recall_ci95": [
-     0.741,
-     1.0
-    ],
-    "precision_ci95": [
-     0.741,
-     1.0
-    ],
-    "false_alarm_rate_ci95": [
-     0.0,
-     0.278
-    ]
+   "judge_alone": {
+    "all": {
+     "cases": 31,
+     "violations_in_set": 17,
+     "caught": 17,
+     "false_alarms": 2,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 0.895,
+     "recall": 1.0,
+     "accuracy_when_decided": 0.935,
+     "decided_share": 1.0,
+     "honored_in_set": 14,
+     "recall_ci95": [
+      0.816,
+      1.0
+     ],
+     "precision_ci95": [
+      0.686,
+      0.971
+     ],
+     "false_alarm_rate_ci95": [
+      0.04,
+      0.399
+     ]
+    },
+    "hard": {
+     "cases": 10,
+     "violations_in_set": 6,
+     "caught": 6,
+     "false_alarms": 1,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 0.857,
+     "recall": 1.0,
+     "accuracy_when_decided": 0.9,
+     "decided_share": 1.0,
+     "honored_in_set": 4,
+     "recall_ci95": [
+      0.61,
+      1.0
+     ],
+     "precision_ci95": [
+      0.487,
+      0.974
+     ],
+     "false_alarm_rate_ci95": [
+      0.046,
+      0.699
+     ]
+    },
+    "plain": {
+     "cases": 21,
+     "violations_in_set": 11,
+     "caught": 11,
+     "false_alarms": 1,
+     "silent_misses": 0,
+     "sent_to_review": 0,
+     "precision": 0.917,
+     "recall": 1.0,
+     "accuracy_when_decided": 0.952,
+     "decided_share": 1.0,
+     "honored_in_set": 10,
+     "recall_ci95": [
+      0.741,
+      1.0
+     ],
+     "precision_ci95": [
+      0.646,
+      0.985
+     ],
+     "false_alarm_rate_ci95": [
+      0.018,
+      0.404
+     ]
+    }
    }
   }
+ },
+ "judge_v1": {
+  "model": "gemini-3.5-flash-lite",
+  "correct": 31,
+  "cases": 31,
+  "caught": 17,
+  "violations": 17,
+  "false_alarms": 0,
+  "honored": 14
  }
 }

@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-07",
+ "reply": "```json\n{\"verdict\": \"honored\", \"evidence\": \"logger.warning(\\\"password reset link expired for user_id=%s\\\", uid)\"}\n```"
+}

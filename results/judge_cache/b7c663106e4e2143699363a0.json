@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 0,
+ "req_id": "SR-04",
+ "reply": "```json\n{\"verdict\": \"violated\", \"evidence\": \"resp.set_cookie('session', sid, httponly=True, secure=True)\"}\n```"
+}

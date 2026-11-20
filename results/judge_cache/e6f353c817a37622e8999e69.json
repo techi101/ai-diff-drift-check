@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-03",
+ "reply": "{\"verdict\": \"violated\", \"evidence\": \"api_key = \\\"sk_live_51HxQ2bExampleExample\\\"\"}"
+}

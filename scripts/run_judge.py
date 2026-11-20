@@ -1,6 +1,9 @@
-"""Run the Gemini judge and write results/judge_results.json.
+"""Run the Gemini judge and write a results file.
 
-  python scripts/run_judge.py [model]
+  python scripts/run_judge.py MODEL [CASES] [OUT] [CACHE_TAG]
+
+v1 (with hint comments):  gemini-3.5-flash-lite data/cases_v1_with_hints.jsonl results/judge_results_v1_with_hints.json ""
+v2 (hints removed):       MODEL data/cases.jsonl results/judge_v2_MODEL.json v2
 
 Run 1 (cascade): rules first, judge only on cases the rules call unknown.
 Run 2 (judge alone): judge on all 31 cases, no rules.
@@ -18,7 +21,11 @@ from drift_check.evaluate import load_cases, run, run_judge_only, score, by_kind
 from drift_check.judge import offline_judge  # noqa: E402
 from drift_check.llm_judge import make_judge  # noqa: E402
 
-MODEL = sys.argv[1] if len(sys.argv) > 1 else "gemini-3.5-flash-lite"
+ARGS = sys.argv[1:]
+MODEL = ARGS[0] if len(ARGS) > 0 else "gemini-3.5-flash-lite"
+CASES = ARGS[1] if len(ARGS) > 1 else "data/cases.jsonl"
+OUT = ARGS[2] if len(ARGS) > 2 else f"results/judge_v2_{MODEL}.json"
+TAG = ARGS[3] if len(ARGS) > 3 else "v2"
 
 
 def summary(rows):
@@ -35,9 +42,10 @@ def summary(rows):
 
 
 def main():
-    cases = load_cases(os.path.join(ROOT, "data", "cases.jsonl"))
+    cases = load_cases(os.path.join(ROOT, CASES))
     log = {}
-    judge = make_judge(MODEL, os.path.join(ROOT, "results", "judge_cache"), repeats=3, log=log, pause=4.5)
+    judge = make_judge(MODEL, os.path.join(ROOT, "results", "judge_cache"), repeats=3, log=log, pause=4.5,
+                       cache_tag=TAG)
 
     regex = run(cases, judge=offline_judge)
     cascade = run(cases, judge=judge)
@@ -59,7 +67,7 @@ def main():
     unanimous = sum(v["unanimous"] for v in per_case.values())
     cascade_ids = [r["id"] for r in regex if r["pred"] == "unknown"]
     out = {
-        "model": MODEL, "model_versions": versions, "temperature": 0, "repeats": 3,
+        "model": MODEL, "cases_file": CASES, "cache_tag": TAG, "model_versions": versions, "temperature": 0, "repeats": 3,
         "stability": {
             "all_cases_unanimous": unanimous, "all_cases": len(cases),
             "cascade_cases_unanimous": sum(per_case[i]["unanimous"] for i in cascade_ids),
@@ -69,7 +77,7 @@ def main():
         "regex": summary(regex), "cascade": summary(cascade), "judge_alone": summary(alone),
         "per_case": per_case,
     }
-    with open(os.path.join(ROOT, "results", "judge_results.json"), "w", encoding="utf-8", newline="\n") as f:
+    with open(os.path.join(ROOT, OUT), "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, indent=1)
     for name in ("regex", "cascade", "judge_alone"):
         for k in ("plain", "hard", "all"):

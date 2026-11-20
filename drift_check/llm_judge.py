@@ -60,7 +60,7 @@ def majority(verdicts):
     return v if n > len(verdicts) / 2 else UNKNOWN
 
 
-def make_judge(model, cache_dir, repeats=3, call=None, log=None, pause=0.0):
+def make_judge(model, cache_dir, repeats=3, call=None, log=None, pause=0.0, cache_tag=""):
     """call(prompt) -> (reply_text, model_version). Defaults to Gemini."""
     if call is None:
         key = os.environ.get("GEMINI_API_KEY")
@@ -74,7 +74,10 @@ def make_judge(model, cache_dir, repeats=3, call=None, log=None, pause=0.0):
         prompt = build_prompt(req_id, req_text, diff)
         runs = []
         for i in range(repeats):
-            h = hashlib.sha256(f"{model}\n{i}\n{prompt}".encode()).hexdigest()[:24]
+            key = f"{model}\n{i}\n{prompt}"
+            if cache_tag:  # fresh namespace: replies cached under another tag are not reused
+                key = f"{cache_tag}\n{key}"
+            h = hashlib.sha256(key.encode()).hexdigest()[:24]
             path = os.path.join(cache_dir, h + ".json")
             if os.path.exists(path):
                 with open(path, encoding="utf-8") as f:

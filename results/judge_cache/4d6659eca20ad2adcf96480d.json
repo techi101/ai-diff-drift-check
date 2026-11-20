@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "model_version": "gemini-3.1-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-10",
+ "reply": "{\"verdict\": \"honored\", \"evidence\": \"name = secure_filename(f.filename) and if name.rsplit('.', 1)[-1].lower() not in ALLOWED_EXT: abort(400)\"}"
+}

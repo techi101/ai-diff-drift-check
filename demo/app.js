@@ -37,7 +37,7 @@
   };
   // Why the regex was wrong on the two false alarms.
   var FA_NOTE = {
-    "sr03-hard-testfixture": "This is a fake value in a test fixture, so it is labeled honored. The rule only sees a long quoted string next to the word token.",
+    "sr03-hard-testfixture": "This value sits in a test file (tests/test_client.py) and is only used by an assertion, so it is labeled honored. The rule only sees a long quoted string next to the word token.",
     "sr07-hard-falsealarm": "The word password is part of the message text. No password is logged, so it is labeled honored."
   };
   var OUT = {
@@ -66,8 +66,12 @@
     if (v === "missed") return c.outcome === "silent_miss" || c.outcome === "review_violation";
     if (v === "false_alarm") return c.outcome === "false_alarm";
     if (v === "review") return c.pred === "unknown";
-    if (v === "judge_wrong") return !!c.judge && c.judge.alone !== c.label;
+    if (v === "judge_wrong") return judgeWrong(c).length > 0;
     return true;
+  }
+  function models() { return (data.judge && data.judge.models) || []; }
+  function judgeWrong(c) {
+    return models().filter(function (m) { return c.judges && c.judges[m.model].alone !== c.label; });
   }
   function visible() {
     return data.cases.filter(function (c) {
@@ -76,26 +80,36 @@
   }
 
   function renderHero() {
-    var R = data.systems ? data.systems.regex : data.scores, C = data.systems && data.systems.cascade, J = data.systems && data.systems.judge_alone;
+    var R = data.systems ? data.systems.regex : data.scores, M = models();
     var frac = function (s) { return s.caught + " of " + s.violations_in_set; };
-    var miss = function (n) { return n + " silent " + (n === 1 ? "miss" : "misses"); };
-    if (!C) {
+    if (!M.length) {
       $("headline").innerHTML = "A regex checker caught <b>" + frac(R.plain) + "</b> violations in plain diffs but only <b>" + frac(R.hard) + "</b> in tricky ones.";
       return;
     }
-    $("headline").innerHTML = "On tricky diffs, regex rules caught <b>" + frac(R.hard) + "</b> violations. Sending the cases regex cannot decide to an LLM judge (" +
-      esc(data.judge.model) + ") raised that to <b>" + frac(C.hard) + "</b>, and the judge alone caught <b>" + frac(J.hard) + "</b> with <b>" +
-      J.hard.false_alarms + " of " + J.hard.honored_in_set + "</b> false alarms. Only 31 hand made cases, so read it as a smoke test, not a benchmark.";
-    var k = [
-      { cls: "bad", label: "Tricky: regex alone", v: R.hard.caught + "<small>/ " + R.hard.violations_in_set + " caught</small>", sub: R.hard.false_alarms + " false alarms, " + miss(R.hard.silent_misses) + ", " + R.hard.sent_to_review + " unresolved" },
-      { cls: "good", label: "Tricky: regex then judge", v: C.hard.caught + "<small>/ " + C.hard.violations_in_set + " caught</small>", sub: C.hard.false_alarms + " false alarms, " + miss(C.hard.silent_misses) + ", " + C.hard.sent_to_review + " unresolved" },
-      { cls: "good", label: "Tricky: judge alone", v: J.hard.caught + "<small>/ " + J.hard.violations_in_set + " caught</small>", sub: J.hard.false_alarms + " false alarms, " + miss(J.hard.silent_misses) + ", " + J.hard.sent_to_review + " unresolved" },
-      { cls: "neutral", label: "All 31: judge alone", v: J.all.caught + "<small>/ " + J.all.violations_in_set + " caught</small>", sub: J.all.false_alarms + " of " + J.all.honored_in_set + " honored cases flagged" }
-    ];
+    var A = data.systems[M[0].model], B = M[1] ? data.systems[M[1].model] : null;
+    var pair = function (f) { return "<b>" + f(A) + "</b>" + (B ? " (" + esc(M[0].short) + ") and <b>" + f(B) + "</b> (" + esc(M[1].short) + ")" : ""); };
+    $("headline").innerHTML = "A smoke test on 31 hand made cases. On the 10 tricky diffs, regex rules caught <b>" + frac(R.hard) +
+      "</b> violations. An LLM judge reading every case caught " + pair(function (x) { return frac(x.judge_alone.hard); }) +
+      ", and regex then judge caught " + pair(function (x) { return frac(x.cascade.hard); }) + ". Across all 31 cases the judge alone raised " +
+      pair(function (x) { return x.judge_alone.all.false_alarms + " of " + x.judge_alone.all.honored_in_set; }) + " false alarms.";
+    var miss = function (n) { return n + " silent " + (n === 1 ? "miss" : "misses"); };
+    var card = function (cls, label, s, extra) {
+      return { cls: cls, label: label, v: s.caught + "<small>/ " + s.violations_in_set + " caught</small>",
+        sub: s.false_alarms + " of " + s.honored_in_set + " false alarms, " + miss(s.silent_misses) + (extra ? ", " + s.sent_to_review + " unresolved" : "") };
+    };
+    var k = [card("bad", "Tricky: regex alone", R.hard, true)];
+    M.forEach(function (m) { k.push(card("good", "Tricky: judge alone, " + m.short, data.systems[m.model].judge_alone.hard, true)); });
+    if (data.judge.models_agree !== undefined) {
+      k.push({ cls: "neutral", label: "Two models agree", v: data.judge.models_agree + "<small>/ " + data.cases.length + " cases</small>", sub: "Same majority verdict, judge alone" });
+    }
     $("kpis").innerHTML = k.map(function (x) {
       return '<div class="kpi ' + x.cls + '"><div class="kpi-label">' + x.label + '</div><div class="kpi-value">' + x.v +
         '</div><div class="kpi-sub">' + x.sub + "</div></div>";
     }).join("");
+    var v1 = data.judge_v1;
+    $("v1note").innerHTML = v1 ? "Earlier run, with hint comments still in three cases: " + esc(v1.model) + " judged <b>" + v1.correct + " of " + v1.cases +
+      "</b> correctly. The comments were removed and everything was rerun, and the numbers above are the rerun. " + esc(v1.model) +
+      " still got " + (function () { var m = models()[0]; return m ? (data.cases.length - m.alone_wrong.length) : "?"; })() + " of " + data.cases.length + " right without them." : "";
   }
 
   function renderCounts() {
@@ -123,7 +137,10 @@
       return '<button class="item' + (c.id === state.sel ? " on" : "") + '" data-id="' + c.id + '">' +
         '<div class="item-top"><span class="item-title">' + esc(TITLES[c.id] || c.id) + '</span><span class="chip ' + o.chip + '">' + o.label + "</span></div>" +
         '<div class="item-meta">' + c.req_id + " · " + KIND[c.kind].toLowerCase() + " · " + c.id + "</div>" +
-        (c.judge ? '<div class="item-judge ' + (c.judge.alone === c.label ? "ok" : "bad") + '">Judge: ' + c.judge.alone + (c.judge.alone === c.label ? " (right)" : " (wrong)") + "</div>" : "") + "</button>";
+        (c.judges ? '<div class="item-judge">' + models().map(function (m) {
+          var ok = c.judges[m.model].alone === c.label;
+          return '<span class="' + (ok ? "ok" : "bad") + '">' + esc(m.short) + ": " + (ok ? "right" : "wrong") + "</span>";
+        }).join(" · ") + "</div>" : "") + "</button>";
     }).join("");
     renderDetail();
   }
@@ -178,14 +195,19 @@
     var c = data.cases.find(function (x) { return x.id === state.sel; });
     if (!c) return;
     var req = reqById[c.req_id], o = OUT[c.outcome];
-    var jd = c.judge, judgeTile = "", cascadeLine = "";
-    if (jd) {
-      var agree = jd.runs.filter(function (v) { return v === jd.alone; }).length;
-      judgeTile = '<div class="verdict"><div class="verdict-label">LLM judge said</div><div class="verdict-val v-' + jd.alone + '">' + jd.alone +
-        (jd.alone === c.label ? ' <span class="tick ok">right</span>' : ' <span class="tick bad">wrong</span>') + '</div><div class="verdict-sub">' + agree + " of " + jd.runs.length + " runs agree</div></div>";
-      cascadeLine = '<p class="why"><b>Regex then judge:</b> final verdict <b class="v-' + jd.cascade + '">' + jd.cascade + "</b>, decided by the " +
-        (jd.cascade_stage === "judge" ? "judge because the rules said unknown" : "rules, so the judge was not asked") + ".</p>" +
-        '<p class="why"><b>Judge evidence:</b> <code>' + esc(jd.alone_why || "none") + "</code></p>";
+    var judgeTile = "", cascadeLine = "";
+    if (c.judges) {
+      models().forEach(function (m) {
+        var jd = c.judges[m.model];
+        var agree = jd.runs.filter(function (v) { return v === jd.alone; }).length;
+        judgeTile += '<div class="verdict"><div class="verdict-label">Judge, ' + esc(m.short) + '</div><div class="verdict-val v-' + jd.alone + '">' + jd.alone +
+          (jd.alone === c.label ? ' <span class="tick ok">right</span>' : ' <span class="tick bad">wrong</span>') + '</div><div class="verdict-sub">' + agree + " of " + jd.runs.length + " runs agree</div></div>";
+        cascadeLine += '<div class="judge-line"><div class="judge-line-head">' + esc(m.short) + " <span class=\"muted\">" + esc(m.model) + "</span></div>" +
+          "<p><b>Judge alone:</b> " + jd.alone + '. Evidence <code>' + esc(jd.alone_why || "none") + "</code></p>" +
+          "<p><b>Regex then judge:</b> <span class=\"v-" + jd.cascade + "\">" + jd.cascade + "</span>, decided by the " +
+          (jd.cascade_stage === "judge" ? "judge because the rules said unknown" : "rules, so the judge was not asked") + ".</p></div>";
+      });
+      cascadeLine = '<div class="judge-lines">' + cascadeLine + "</div>";
     } else {
       judgeTile = '<div class="verdict"><div class="verdict-label">LLM judge</div><div class="verdict-val v-judge">Not run</div></div>';
     }
@@ -209,38 +231,44 @@
 
   function ci(x) { return x ? '<span class="ci">[' + x[0].toFixed(2) + ", " + x[1].toFixed(2) + "]</span>" : ""; }
   function renderScores() {
-    var k = state.subset, sys = ["regex", "cascade", "judge_alone"];
-    var NAMES = { regex: "Regex alone", cascade: "Regex then judge", judge_alone: "Judge alone" };
-    var S = function (n) { return data.systems[n][k]; };
+    var k = state.subset, M = models();
+    var cols = [{ name: "Regex alone", s: function () { return data.systems.regex[k]; } }];
+    M.forEach(function (m) { cols.push({ group: "Regex then judge", name: m.short, s: function () { return data.systems[m.model].cascade[k]; } }); });
+    M.forEach(function (m) { cols.push({ group: "Judge alone", name: m.short, s: function () { return data.systems[m.model].judge_alone[k]; } }); });
     var bar = function (v) { return '<span class="bar"><i style="width:' + Math.round((v || 0) * 100) + '%"></i></span>'; };
-    $("scoreTitle").textContent = { plain: "Plain diffs", hard: "Tricky diffs", all: "All diffs" }[k] + " (" + S("regex").cases + " cases)";
+    $("scoreTitle").textContent = { plain: "Plain diffs", hard: "Tricky diffs", all: "All diffs" }[k] + " (" + data.systems.regex[k].cases + " cases)";
     var rows = [
       ["Violations caught", "Said violated on a violated case", function (s) { return s.caught + " <small>/ " + s.violations_in_set + "</small>"; }],
       ["Recall", "Caught ÷ violations", function (s) { return fmt(s.recall) + ci(s.recall_ci95) + bar(s.recall); }],
       ["Precision", "Caught ÷ everything flagged", function (s) { return fmt(s.precision) + ci(s.precision_ci95) + bar(s.precision); }],
-      ["False alarms", "Flagged an honored case", function (s) { return s.false_alarms + " <small>/ " + s.honored_in_set + " honored</small>"; }],
+      ["False alarms", "Flagged an honored case", function (s) { return s.false_alarms + " <small>/ " + s.honored_in_set + "</small>"; }],
       ["Silent misses", "Said honored on a violation", function (s) { return s.silent_misses + " <small>/ " + s.violations_in_set + "</small>"; }],
-      ["Unresolved", "Still unknown at the end", function (s) { return s.sent_to_review + " <small>/ " + s.cases + " cases</small>"; }]
+      ["Unresolved", "Still unknown at the end", function (s) { return s.sent_to_review + " <small>/ " + s.cases + "</small>"; }]
     ];
-    $("scoreTable").innerHTML = "<thead><tr><th>Metric</th>" + sys.map(function (n) {
-      return "<th>" + NAMES[n] + "</th>";
+    var groupRow = '<tr class="grp"><th></th><th></th>' + (M.length ? '<th colspan="' + M.length + '">Regex then judge</th><th colspan="' + M.length + '">Judge alone</th>' : "") + "</tr>";
+    $("scoreTable").innerHTML = "<thead>" + groupRow + "<tr><th>Metric</th>" + cols.map(function (c) {
+      return "<th>" + esc(c.name) + "</th>";
     }).join("") + "</tr></thead><tbody>" + rows.map(function (r) {
       return '<tr><td><span class="metric-name">' + r[0] + '</span><span class="metric-def">' + r[1] + "</span></td>" +
-        sys.map(function (n) { return '<td class="num">' + r[2](S(n)) + "</td>"; }).join("") + "</tr>";
+        cols.map(function (c) { return '<td class="num">' + r[2](c.s()) + "</td>"; }).join("") + "</tr>";
     }).join("") + "</tbody>";
     document.querySelectorAll("#subsetToggle button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === k); });
   }
   function renderJudgeCard() {
-    var j = data.judge, st = j.stability;
-    var wrong = data.cases.filter(function (c) { return c.judge && c.judge.alone !== c.label; });
+    var M = models();
+    var link = function (id) { return '<button class="case-link" data-id="' + id + '">' + esc(TITLES[id] || id) + "</button>"; };
     $("judgeCard").innerHTML =
-      '<div class="card-head"><h3>LLM judge run</h3><span class="chip chip-cwe">' + esc(j.model) + "</span></div>" +
-      "<p>Each case was sent " + j.repeats + " times at temperature " + j.temperature + ". The prediction is the majority verdict, and no majority counts as unknown.</p>" +
-      '<div class="judge-stat">' +
-      '<div class="kpi neutral"><div class="kpi-label">All 3 runs agreed</div><div class="kpi-value">' + st.all_cases_unanimous + "<small>/ " + st.all_cases + " cases</small></div></div>" +
-      '<div class="kpi bad"><div class="kpi-label">Judge alone wrong</div><div class="kpi-value">' + wrong.length + "<small>/ " + data.cases.length + " cases</small></div></div></div>" +
-      "<p><b>Regex then judge</b> runs the rules first and only asks the judge about the " + st.cascade_cases + " cases the rules mark unknown. <b>Judge alone</b> asks it about every case.</p>" +
-      '<p class="muted small">Use the "Judge wrong" filter in Findings to see every judge mistake. Every case shows the exact prompt.</p>';
+      '<div class="card-head"><h3>LLM judge runs</h3><span class="chip chip-muted">Free tier, temperature 0</span></div>' +
+      "<p>Each case went to each model " + data.judge.repeats + " times. The prediction is the majority verdict; no majority counts as unknown.</p>" +
+      M.map(function (m) {
+        var st = m.stability;
+        return '<div class="model-block"><div class="model-head"><b>' + esc(m.short) + '</b> <code>' + esc(m.model) + "</code></div>" +
+          '<div class="model-stats"><span>All 3 runs agreed: <b>' + st.all_cases_unanimous + " / " + st.all_cases + "</b></span>" +
+          "<span>Judge alone wrong: <b>" + m.alone_wrong.length + " / " + st.all_cases + "</b></span></div>" +
+          (m.alone_wrong.length ? '<div class="wrong-list">Wrong on: ' + m.alone_wrong.map(link).join("") + "</div>" : '<div class="wrong-list">No wrong verdicts.</div>') + "</div>";
+      }).join("") +
+      (data.judge.models_agree !== undefined ? "<p>The two models gave the same verdict on <b>" + data.judge.models_agree + " of " + data.cases.length + "</b> cases.</p>" : "") +
+      '<p class="muted small">Regex then judge only asks the judge about the cases the rules mark unknown, so it keeps every regex mistake on cases the rules decided.</p>';
   }
 
   function renderReqs() {
@@ -284,6 +312,10 @@
     });
     $("reqList").addEventListener("click", function (e) {
       var b = e.target.closest(".case-chip"); if (!b) return;
+      select(b.dataset.id, true);
+    });
+    $("judgeCard").addEventListener("click", function (e) {
+      var b = e.target.closest(".case-link"); if (!b) return;
       select(b.dataset.id, true);
     });
     $("subsetToggle").addEventListener("click", function (e) {

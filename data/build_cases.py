@@ -5,14 +5,25 @@ kind = "hard":  written on purpose to sit where regex rules are weak
                 (indirection, helpers, look-alike strings). Labels for these
                 were decided from what the code does, before running the rules.
 All code is synthetic and written for this repo.
+
+v2 (21 Nov 2026): removed comments and literals that stated the answer, so a
+judge has to read the code. The previous file is data/cases_v1_with_hints.jsonl.
+  sr01-hard-helper       removed comment "# wraps hashlib.md5"
+  sr03-hard-testfixture  removed comment line "# tests/test_client.py: fake value,
+                         never a real key"; the path now sits in the diff header
+                         (tests/test_client.py), where a real diff shows it;
+                         literal "test_token_not_real_123456" -> "test_token_123456"
+  sr08-hard-helper       removed comment "# aborts 404 if not the caller's"
+Labels and code behaviour are unchanged. Function names (quick_digest,
+load_owned, secure_filename) are kept: they are what real code would contain.
 """
 import json
 import os
 
 
-def d(*lines):
+def d(*lines, path="app.py"):
     """Make a small unified diff from '+'/'-'/' ' prefixed lines."""
-    return "--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,1 @@\n" + "\n".join(lines) + "\n"
+    return f"--- a/{path}\n+++ b/{path}\n@@ -1,1 +1,1 @@\n" + "\n".join(lines) + "\n"
 
 
 CASES = [
@@ -34,7 +45,7 @@ CASES = [
         "+    user.password = request.form['password']",
         "+    db.session.add(user)")),
     ("sr01-hard-helper", "SR-01", "violated", "hard", d(
-        "+from .util import quick_digest  # wraps hashlib.md5",
+        "+from .util import quick_digest",
         "+def register(username, password):",
         "+    db.insert_user(username, quick_digest(password))")),
 
@@ -62,9 +73,8 @@ CASES = [
         "+api_key = os.environ[\"STRIPE_API_KEY\"]",
         "+client = Stripe(api_key)")),
     ("sr03-hard-testfixture", "SR-03", "honored", "hard", d(
-        "+# tests/test_client.py: fake value, never a real key",
-        "+token = \"test_token_not_real_123456\"",
-        "+assert parse(token) is None")),
+        "+token = \"test_token_123456\"",
+        "+assert parse(token) is None", path="tests/test_client.py")),
 
     # SR-04 cookies
     ("sr04-plain-bad", "SR-04", "violated", "plain", d(
@@ -129,7 +139,7 @@ CASES = [
         "+@app.route('/invoices/<int:invoice_id>/pdf')",
         "+@login_required",
         "+def invoice_pdf(invoice_id):",
-        "+    inv = load_owned(Invoice, invoice_id)  # aborts 404 if not the caller's",
+        "+    inv = load_owned(Invoice, invoice_id)",
         "+    return render_pdf(inv)")),
 
     # SR-09 rate limit

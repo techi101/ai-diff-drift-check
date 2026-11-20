@@ -2,7 +2,7 @@
 
 **Problem:** a coding agent writes a diff after a security design review. Did the code drift from the requirements that review set?
 
-**Result:** on the 10 tricky diffs, regex rules caught **1 of 6** violations. Sending only the cases regex cannot decide to an LLM judge (Gemini `gemini-3.5-flash-lite`, free tier, temperature 0, majority of 3 runs) raised that to **5 of 6**, and the judge on its own caught **6 of 6** with **0 of 4** false alarms. Across all 31 cases the judge alone got every case right (17 of 17 violations caught, 0 of 14 false alarms) and all 3 runs agreed on all 31. That is 31 hand made cases, so treat it as a smoke test: the 95% interval on the judge's recall is still 0.82 to 1.00.
+**Result (a smoke test on 31 hand made cases):** on the 10 tricky diffs, regex rules caught **1 of 6** violations. An LLM judge reading every case caught **6 of 6** with two free tier Gemini models (`gemini-3.5-flash-lite` and `gemini-3.1-flash-lite`, temperature 0, majority of 3 runs). Sending only the cases regex cannot decide to the judge caught **5 of 6**. Across all 31 cases the judge alone caught 17 of 17 violations with **0 of 14** false alarms (3.5 Flash Lite) and **2 of 14** (3.1 Flash Lite). Hint comments were removed from three cases before this run; the earlier run with them scored 31 of 31, and 3.5 Flash Lite still scores 31 of 31 without them.
 
 **[Try it live: ai-diff-drift-check.vercel.app](https://ai-diff-drift-check.vercel.app)** (source in `demo/`, data rebuilt from the real eval by `python demo/build_data.py`)
 
@@ -60,7 +60,7 @@ python -m pytest -q
 | hard | 10 | 6 | 1 | 2 | 1 | 6 | 0.33 | 0.17 |
 | all | 31 | 17 | 11 | 2 | 1 | 7 | 0.85 | 0.65 |
 
-Tests: 36 passed (28 at the time of this table; 8 judge tests added since).
+Tests: 38 passed (28 at the time of this table; judge tests added since).
 
 What the misses look like:
 - **Silent miss**: `logger.debug("incoming request headers: %s", dict(request.headers))` logs the Authorization header, but no forbidden word appears on the line, so the rule says `honored`.
@@ -71,25 +71,47 @@ The takeaway: rules are fine on the obvious diffs and fall apart exactly where t
 
 ## LLM judge results (real output, 21 Nov 2026)
 
-`python scripts/run_judge.py` runs three systems and writes `results/judge_results.json`. Model: `gemini-3.5-flash-lite` (free tier, temperature 0). Each case is asked 3 times and the majority verdict is the prediction; all 93 replies are cached in `results/judge_cache/`, so a rerun makes no API calls. Brackets are Wilson 95% intervals.
+`python scripts/run_judge.py MODEL` runs three systems on `data/cases.jsonl` and writes `results/judge_v2_MODEL.json`: regex alone, regex then judge (the judge only sees the cases the rules mark unknown), and judge alone (every case, no rules). Free tier Gemini, temperature 0, each case asked 3 times, majority verdict wins, split votes count as unknown. All replies are cached in `results/judge_cache/` so reruns make no API calls. Brackets are Wilson 95% intervals.
 
-| system | subset | caught | false alarms | silent misses | unresolved | precision | recall |
-|---|---|---|---|---|---|---|---|
-| regex alone | plain | 10/11 | 0/10 | 0 | 1 | 1.00 | 0.91 [0.62, 0.98] |
-| regex alone | tricky | 1/6 | 2/4 | 1 | 6 | 0.33 | 0.17 [0.03, 0.56] |
-| regex alone | all | 11/17 | 2/14 | 1 | 7 | 0.85 | 0.65 [0.41, 0.83] |
-| regex then judge | plain | 11/11 | 0/10 | 0 | 0 | 1.00 | 1.00 [0.74, 1.00] |
-| regex then judge | tricky | 5/6 | 2/4 | 1 | 0 | 0.71 | 0.83 [0.44, 0.97] |
-| regex then judge | all | 16/17 | 2/14 | 1 | 0 | 0.89 | 0.94 [0.73, 0.99] |
-| judge alone | plain | 11/11 | 0/10 | 0 | 0 | 1.00 | 1.00 [0.74, 1.00] |
-| judge alone | tricky | 6/6 | 0/4 | 0 | 0 | 1.00 | 1.00 [0.61, 1.00] |
-| judge alone | all | 17/17 | 0/14 | 0 | 0 | 1.00 | 1.00 [0.82, 1.00] |
+### Case edits before this run (hint comments removed)
 
-Judge stability: all 3 runs agreed on 31 of 31 cases (7 of 7 in the cascade slice).
+An earlier run judged 31 of 31 correctly, but three tricky cases carried comments that stated the answer. They were removed in `data/build_cases.py`; the old file is kept as `data/cases_v1_with_hints.jsonl` and its results as `results/judge_results_v1_with_hints.json`. Labels and code behaviour are unchanged, and regex results are identical.
+
+1. `sr01-hard-helper`: removed the comment `# wraps hashlib.md5`.
+2. `sr03-hard-testfixture`: removed the comment line `# tests/test_client.py: fake value, never a real key`; the path now sits in the diff header (`tests/test_client.py`), where a real diff shows it; literal `test_token_not_real_123456` became `test_token_123456`.
+3. `sr08-hard-helper`: removed the comment `# aborts 404 if not the caller's`.
+
+All 31 cases were also scanned for words such as insecure, bug, violates, safe, TODO, fix, fake, real and vuln; there were no other hits. Function names like `quick_digest` and `load_owned` were kept because real code has names like that; without them two labels would depend only on code outside the diff.
+
+### Numbers on the cleaned cases
+
+| system | model | subset | caught | false alarms | silent misses | unresolved | precision | recall |
+|---|---|---|---|---|---|---|---|---|
+| regex alone | none | plain | 10/11 | 0/10 | 0 | 1 | 1.00 [0.72, 1.00] | 0.91 [0.62, 0.98] |
+| regex alone | none | tricky | 1/6 | 2/4 | 1 | 6 | 0.33 [0.06, 0.79] | 0.17 [0.03, 0.56] |
+| regex alone | none | all | 11/17 | 2/14 | 1 | 7 | 0.85 [0.58, 0.96] | 0.65 [0.41, 0.83] |
+| regex then judge | `gemini-3.5-flash-lite` | plain | 11/11 | 0/10 | 0 | 0 | 1.00 [0.74, 1.00] | 1.00 [0.74, 1.00] |
+| regex then judge | `gemini-3.5-flash-lite` | tricky | 5/6 | 2/4 | 1 | 0 | 0.71 [0.36, 0.92] | 0.83 [0.44, 0.97] |
+| regex then judge | `gemini-3.5-flash-lite` | all | 16/17 | 2/14 | 1 | 0 | 0.89 [0.67, 0.97] | 0.94 [0.73, 0.99] |
+| regex then judge | `gemini-3.1-flash-lite` | plain | 11/11 | 0/10 | 0 | 0 | 1.00 [0.74, 1.00] | 1.00 [0.74, 1.00] |
+| regex then judge | `gemini-3.1-flash-lite` | tricky | 5/6 | 2/4 | 1 | 0 | 0.71 [0.36, 0.92] | 0.83 [0.44, 0.97] |
+| regex then judge | `gemini-3.1-flash-lite` | all | 16/17 | 2/14 | 1 | 0 | 0.89 [0.67, 0.97] | 0.94 [0.73, 0.99] |
+| judge alone | `gemini-3.5-flash-lite` | plain | 11/11 | 0/10 | 0 | 0 | 1.00 [0.74, 1.00] | 1.00 [0.74, 1.00] |
+| judge alone | `gemini-3.5-flash-lite` | tricky | 6/6 | 0/4 | 0 | 0 | 1.00 [0.61, 1.00] | 1.00 [0.61, 1.00] |
+| judge alone | `gemini-3.5-flash-lite` | all | 17/17 | 0/14 | 0 | 0 | 1.00 [0.82, 1.00] | 1.00 [0.82, 1.00] |
+| judge alone | `gemini-3.1-flash-lite` | plain | 11/11 | 1/10 | 0 | 0 | 0.92 [0.65, 0.98] | 1.00 [0.74, 1.00] |
+| judge alone | `gemini-3.1-flash-lite` | tricky | 6/6 | 1/4 | 0 | 0 | 0.86 [0.49, 0.97] | 1.00 [0.61, 1.00] |
+| judge alone | `gemini-3.1-flash-lite` | all | 17/17 | 2/14 | 0 | 0 | 0.90 [0.69, 0.97] | 1.00 [0.82, 1.00] |
+
+Where the judge alone was wrong:
+- `gemini-3.1-flash-lite` on `sr03-hard-testfixture` (labeled honored): said violated, quoting `token = "test_token_123456"`
+- `gemini-3.1-flash-lite` on `sr05-plain-ok` (labeled honored): said violated, quoting `r = requests.get(PARTNER_URL, timeout=5)`
+
+Stability: all 3 runs agreed on 31 of 31 cases for both models. The two models gave the same verdict on 29 of 31 cases.
+
+Both judges are Flash Lite models two generations apart, which is a weaker comparison than across tiers. `gemini-3.6-flash` was tried as the second model, but the free tier allows it 20 requests per day and the run needs 93, so it was stopped and none of its replies are used.
 
 The cascade keeps the regex mistakes (the 2 false alarms and the logged headers silent miss), because the judge is never asked about cases the rules already decided. On this set the judge alone beats the cascade, so a rule that says "honored" should probably not be final for requirements like logging.
-
-Extra caveats for the judge numbers: one model, one prompt; and three tricky cases contain a code comment that hints at the answer (`# wraps hashlib.md5`, `fake value, never a real key`, `# aborts 404 if not the caller's`), which the judge can read and regex ignores.
 
 ## Honest limits
 
@@ -102,5 +124,5 @@ Extra caveats for the judge numbers: one model, one prompt; and three tricky cas
 ## Next steps if this were real
 
 1. Grow the hard set with real agent-written diffs (e.g. from public repos with Claude Code / Cursor commits) and two labelers.
-2. Strip hint comments from the tricky cases and rerun the judge, then try a second model, to see how much of the 31/31 survives.
+2. Add a judge from a different tier or vendor, and diffs where the decisive code really is in another file.
 3. Track the same metrics per release so a prompt or model change that raises silent misses fails CI.

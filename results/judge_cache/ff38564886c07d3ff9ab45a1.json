@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 0,
+ "req_id": "SR-08",
+ "reply": "```json\n{\"verdict\": \"honored\", \"evidence\": \"inv = Invoice.query.filter_by(id=invoice_id, owner_id=current_user.id).first_or_404()\"}\n```"
+}
