@@ -50,7 +50,7 @@
   };
   var KIND = { plain: "Plain", hard: "Tricky" };
 
-  var data, reqById = {}, state = { kind: "all", out: "all", sel: "sr07-hard-headers" };
+  var data, reqById = {}, state = { kind: "all", out: "all", sel: "sr07-hard-headers", subset: "hard" };
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -66,6 +66,7 @@
     if (v === "missed") return c.outcome === "silent_miss" || c.outcome === "review_violation";
     if (v === "false_alarm") return c.outcome === "false_alarm";
     if (v === "review") return c.pred === "unknown";
+    if (v === "judge_wrong") return !!c.judge && c.judge.alone !== c.label;
     return true;
   }
   function visible() {
@@ -75,15 +76,21 @@
   }
 
   function renderHero() {
-    var s = data.scores;
-    $("headline").innerHTML = "A regex checker caught <b>" + s.plain.caught + " of " + s.plain.violations_in_set +
-      "</b> violations in plain diffs but only <b>" + s.hard.caught + " of " + s.hard.violations_in_set +
-      "</b> in tricky ones, and let " + s.hard.silent_misses + " tricky violation pass as safe. The LLM judge stage is built but not run yet.";
+    var R = data.systems ? data.systems.regex : data.scores, C = data.systems && data.systems.cascade, J = data.systems && data.systems.judge_alone;
+    var frac = function (s) { return s.caught + " of " + s.violations_in_set; };
+    var miss = function (n) { return n + " silent " + (n === 1 ? "miss" : "misses"); };
+    if (!C) {
+      $("headline").innerHTML = "A regex checker caught <b>" + frac(R.plain) + "</b> violations in plain diffs but only <b>" + frac(R.hard) + "</b> in tricky ones.";
+      return;
+    }
+    $("headline").innerHTML = "On tricky diffs, regex rules caught <b>" + frac(R.hard) + "</b> violations. Sending the cases regex cannot decide to an LLM judge (" +
+      esc(data.judge.model) + ") raised that to <b>" + frac(C.hard) + "</b>, and the judge alone caught <b>" + frac(J.hard) + "</b> with <b>" +
+      J.hard.false_alarms + " of " + J.hard.honored_in_set + "</b> false alarms. Only 31 hand made cases, so read it as a smoke test, not a benchmark.";
     var k = [
-      { cls: "good", label: "Plain diffs: violations caught", v: s.plain.caught + "<small>/ " + s.plain.violations_in_set + "</small>", sub: "Recall " + fmt(s.plain.recall) + " on " + s.plain.cases + " cases" },
-      { cls: "bad", label: "Tricky diffs: violations caught", v: s.hard.caught + "<small>/ " + s.hard.violations_in_set + "</small>", sub: "Recall " + fmt(s.hard.recall) + " on " + s.hard.cases + " cases" },
-      { cls: "bad", label: "Silent misses", v: s.all.silent_misses + "<small>/ " + s.all.violations_in_set + " violations</small>", sub: "Said honored on a real violation" },
-      { cls: "warn", label: "Sent to review", v: s.all.sent_to_review + "<small>/ " + s.all.cases + " cases</small>", sub: "Rules could not decide" }
+      { cls: "bad", label: "Tricky: regex alone", v: R.hard.caught + "<small>/ " + R.hard.violations_in_set + " caught</small>", sub: R.hard.false_alarms + " false alarms, " + miss(R.hard.silent_misses) + ", " + R.hard.sent_to_review + " unresolved" },
+      { cls: "good", label: "Tricky: regex then judge", v: C.hard.caught + "<small>/ " + C.hard.violations_in_set + " caught</small>", sub: C.hard.false_alarms + " false alarms, " + miss(C.hard.silent_misses) + ", " + C.hard.sent_to_review + " unresolved" },
+      { cls: "good", label: "Tricky: judge alone", v: J.hard.caught + "<small>/ " + J.hard.violations_in_set + " caught</small>", sub: J.hard.false_alarms + " false alarms, " + miss(J.hard.silent_misses) + ", " + J.hard.sent_to_review + " unresolved" },
+      { cls: "neutral", label: "All 31: judge alone", v: J.all.caught + "<small>/ " + J.all.violations_in_set + " caught</small>", sub: J.all.false_alarms + " of " + J.all.honored_in_set + " honored cases flagged" }
     ];
     $("kpis").innerHTML = k.map(function (x) {
       return '<div class="kpi ' + x.cls + '"><div class="kpi-label">' + x.label + '</div><div class="kpi-value">' + x.v +
@@ -115,7 +122,8 @@
       var o = OUT[c.outcome];
       return '<button class="item' + (c.id === state.sel ? " on" : "") + '" data-id="' + c.id + '">' +
         '<div class="item-top"><span class="item-title">' + esc(TITLES[c.id] || c.id) + '</span><span class="chip ' + o.chip + '">' + o.label + "</span></div>" +
-        '<div class="item-meta">' + c.req_id + " · " + KIND[c.kind].toLowerCase() + " · " + c.id + "</div></button>";
+        '<div class="item-meta">' + c.req_id + " · " + KIND[c.kind].toLowerCase() + " · " + c.id + "</div>" +
+        (c.judge ? '<div class="item-judge ' + (c.judge.alone === c.label ? "ok" : "bad") + '">Judge: ' + c.judge.alone + (c.judge.alone === c.label ? " (right)" : " (wrong)") + "</div>" : "") + "</button>";
     }).join("");
     renderDetail();
   }
@@ -170,7 +178,17 @@
     var c = data.cases.find(function (x) { return x.id === state.sel; });
     if (!c) return;
     var req = reqById[c.req_id], o = OUT[c.outcome];
-    var judge = c.stage === "judge" ? "Abstained (not run)" : "Not called, rules decided";
+    var jd = c.judge, judgeTile = "", cascadeLine = "";
+    if (jd) {
+      var agree = jd.runs.filter(function (v) { return v === jd.alone; }).length;
+      judgeTile = '<div class="verdict"><div class="verdict-label">LLM judge said</div><div class="verdict-val v-' + jd.alone + '">' + jd.alone +
+        (jd.alone === c.label ? ' <span class="tick ok">right</span>' : ' <span class="tick bad">wrong</span>') + '</div><div class="verdict-sub">' + agree + " of " + jd.runs.length + " runs agree</div></div>";
+      cascadeLine = '<p class="why"><b>Regex then judge:</b> final verdict <b class="v-' + jd.cascade + '">' + jd.cascade + "</b>, decided by the " +
+        (jd.cascade_stage === "judge" ? "judge because the rules said unknown" : "rules, so the judge was not asked") + ".</p>" +
+        '<p class="why"><b>Judge evidence:</b> <code>' + esc(jd.alone_why || "none") + "</code></p>";
+    } else {
+      judgeTile = '<div class="verdict"><div class="verdict-label">LLM judge</div><div class="verdict-val v-judge">Not run</div></div>';
+    }
     var tail = "";
     if (c.outcome === "correct_pass") tail = "<p class=\"why\"><b>No drift.</b> Labeled honored and the rules agreed.</p>";
     if (c.outcome === "review_ok") tail = "<p class=\"why\"><b>No drift.</b> Labeled honored, but the rules could not prove it, so a human or the judge would have to look.</p>";
@@ -183,36 +201,46 @@
       '<div class="verdicts">' +
       '<div class="verdict"><div class="verdict-label">Ground truth label</div><div class="verdict-val v-' + c.label + '">' + c.label + "</div></div>" +
       '<div class="verdict"><div class="verdict-label">Regex rules said</div><div class="verdict-val v-' + c.pred + '">' + c.pred + "</div></div>" +
-      '<div class="verdict"><div class="verdict-label">LLM judge</div><div class="verdict-val v-judge">' + judge + "</div></div></div>" +
+      judgeTile + "</div>" +
       renderDiff(c, req) +
-      '<p class="why"><b>Rule output:</b> ' + esc(c.why) + "</p>" + tail +
-      (c.judge_prompt ? '<details class="prompt"><summary>Prompt the LLM judge would get</summary><pre class="code-block">' + esc(c.judge_prompt) + "</pre></details>" : "");
+      '<p class="why"><b>Rule output:</b> ' + esc(c.why) + "</p>" + tail + cascadeLine +
+      (c.judge_prompt ? '<details class="prompt"><summary>Exact prompt sent to the LLM judge</summary><pre class="code-block">' + esc(c.judge_prompt) + "</pre></details>" : "");
   }
 
+  function ci(x) { return x ? '<span class="ci">[' + x[0].toFixed(2) + ", " + x[1].toFixed(2) + "]</span>" : ""; }
   function renderScores() {
-    var s = data.scores, cols = ["plain", "hard", "all"];
-    var honored = function (k) { return data.cases.filter(function (c) { return (k === "all" || c.kind === k) && c.label === "honored"; }).length; };
+    var k = state.subset, sys = ["regex", "cascade", "judge_alone"];
+    var NAMES = { regex: "Regex alone", cascade: "Regex then judge", judge_alone: "Judge alone" };
+    var S = function (n) { return data.systems[n][k]; };
     var bar = function (v) { return '<span class="bar"><i style="width:' + Math.round((v || 0) * 100) + '%"></i></span>'; };
+    $("scoreTitle").textContent = { plain: "Plain diffs", hard: "Tricky diffs", all: "All diffs" }[k] + " (" + S("regex").cases + " cases)";
     var rows = [
-      ["Violations caught", "Rules said violated on a violated case", function (k) { return s[k].caught + " <small>/ " + s[k].violations_in_set + "</small>"; }],
-      ["Recall", "Caught ÷ violations", function (k) { return fmt(s[k].recall) + bar(s[k].recall); }],
-      ["Precision", "Caught ÷ everything flagged", function (k) { return fmt(s[k].precision) + bar(s[k].precision); }],
-      ["False alarms", "Flagged an honored case", function (k) { return s[k].false_alarms + " <small>/ " + honored(k) + " honored</small>"; }],
-      ["Silent misses", "Said honored on a violation", function (k) { return s[k].silent_misses + " <small>/ " + s[k].violations_in_set + "</small>"; }],
-      ["Sent to review", "Rules answered unknown", function (k) { return s[k].sent_to_review + " <small>/ " + s[k].cases + " cases</small>"; }],
-      ["Accuracy when it decides", "Correct ÷ cases not sent to review", function (k) { return fmt(s[k].accuracy_when_decided); }]
+      ["Violations caught", "Said violated on a violated case", function (s) { return s.caught + " <small>/ " + s.violations_in_set + "</small>"; }],
+      ["Recall", "Caught ÷ violations", function (s) { return fmt(s.recall) + ci(s.recall_ci95) + bar(s.recall); }],
+      ["Precision", "Caught ÷ everything flagged", function (s) { return fmt(s.precision) + ci(s.precision_ci95) + bar(s.precision); }],
+      ["False alarms", "Flagged an honored case", function (s) { return s.false_alarms + " <small>/ " + s.honored_in_set + " honored</small>"; }],
+      ["Silent misses", "Said honored on a violation", function (s) { return s.silent_misses + " <small>/ " + s.violations_in_set + "</small>"; }],
+      ["Unresolved", "Still unknown at the end", function (s) { return s.sent_to_review + " <small>/ " + s.cases + " cases</small>"; }]
     ];
-    $("scoreTable").innerHTML = "<thead><tr><th>Metric</th>" + cols.map(function (k) {
-      return "<th>" + (k === "all" ? "All" : KIND[k]) + "<small>" + s[k].cases + " cases</small></th>";
+    $("scoreTable").innerHTML = "<thead><tr><th>Metric</th>" + sys.map(function (n) {
+      return "<th>" + NAMES[n] + "</th>";
     }).join("") + "</tr></thead><tbody>" + rows.map(function (r) {
       return '<tr><td><span class="metric-name">' + r[0] + '</span><span class="metric-def">' + r[1] + "</span></td>" +
-        cols.map(function (k) { return '<td class="num">' + r[2](k) + "</td>"; }).join("") + "</tr>";
+        sys.map(function (n) { return '<td class="num">' + r[2](S(n)) + "</td>"; }).join("") + "</tr>";
     }).join("") + "</tbody>";
-    var unk = data.cases.filter(function (c) { return c.pred === "unknown"; });
-    var unkViol = unk.filter(function (c) { return c.label === "violated"; }).length;
-    $("judgeStat").innerHTML =
-      '<div class="kpi warn"><div class="kpi-label">Cases routed to judge</div><div class="kpi-value">' + unk.length + "<small>/ " + s.all.cases + '</small></div></div>' +
-      '<div class="kpi bad"><div class="kpi-label">Real violations among them</div><div class="kpi-value">' + unkViol + "<small>/ " + unk.length + "</small></div></div>";
+    document.querySelectorAll("#subsetToggle button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === k); });
+  }
+  function renderJudgeCard() {
+    var j = data.judge, st = j.stability;
+    var wrong = data.cases.filter(function (c) { return c.judge && c.judge.alone !== c.label; });
+    $("judgeCard").innerHTML =
+      '<div class="card-head"><h3>LLM judge run</h3><span class="chip chip-cwe">' + esc(j.model) + "</span></div>" +
+      "<p>Each case was sent " + j.repeats + " times at temperature " + j.temperature + ". The prediction is the majority verdict, and no majority counts as unknown.</p>" +
+      '<div class="judge-stat">' +
+      '<div class="kpi neutral"><div class="kpi-label">All 3 runs agreed</div><div class="kpi-value">' + st.all_cases_unanimous + "<small>/ " + st.all_cases + " cases</small></div></div>" +
+      '<div class="kpi bad"><div class="kpi-label">Judge alone wrong</div><div class="kpi-value">' + wrong.length + "<small>/ " + data.cases.length + " cases</small></div></div></div>" +
+      "<p><b>Regex then judge</b> runs the rules first and only asks the judge about the " + st.cascade_cases + " cases the rules mark unknown. <b>Judge alone</b> asks it about every case.</p>" +
+      '<p class="muted small">Use the "Judge wrong" filter in Findings to see every judge mistake. Every case shows the exact prompt.</p>';
   }
 
   function renderReqs() {
@@ -258,6 +286,10 @@
       var b = e.target.closest(".case-chip"); if (!b) return;
       select(b.dataset.id, true);
     });
+    $("subsetToggle").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      state.subset = b.dataset.v; renderScores();
+    });
     $("moreBtn").addEventListener("click", function () {
       var body = $("moreBody"), open = body.hidden;
       body.hidden = !open;
@@ -269,7 +301,7 @@
   fetch("data.json").then(function (r) { return r.json(); }).then(function (d) {
     data = d;
     d.requirements.forEach(function (r) { reqById[r.id] = r; });
-    renderHero(); renderScores(); renderReqs(); renderCounts(); renderList(); bind();
+    renderHero(); renderScores(); renderJudgeCard(); renderReqs(); renderCounts(); renderList(); bind();
   }).catch(function () {
     $("headline").textContent = "Could not load data.json.";
   });

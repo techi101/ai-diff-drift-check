@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 1,
+ "req_id": "SR-10",
+ "reply": "```json\n{\"verdict\": \"violated\", \"evidence\": \"f = request.files['avatar']\\nname = secure_filename(f.filename)\\nf.save(os.path.join(UPLOAD_DIR, name))\"}\n```"
+}

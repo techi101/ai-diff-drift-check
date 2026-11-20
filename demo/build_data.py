@@ -89,9 +89,25 @@ def main():
                           "cwe": CWE[k][0], "cwe_name": CWE[k][1]} for k in RULES],
         "cases": out_cases,
         "scores": {"all": score(rows), **by_kind(rows)},
-        "judge": {"run": False, "note": "drift_check/judge.py builds the prompt and parses replies, "
-                  "but the eval uses offline_judge, which makes no model call and abstains."},
+        "judge": {"run": False},
     }
+    jr_path = os.path.join(ROOT, "results", "judge_results.json")
+    if os.path.exists(jr_path):
+        with open(jr_path, encoding="utf-8") as f:
+            jr = json.load(f)
+        data["judge"] = {"run": True, "model": jr["model"], "model_versions": jr["model_versions"],
+                         "temperature": jr["temperature"], "repeats": jr["repeats"],
+                         "stability": jr["stability"]}
+        data["systems"] = {"regex": jr["regex"], "cascade": jr["cascade"], "judge_alone": jr["judge_alone"]}
+        assert jr["regex"]["all"]["caught"] == data["scores"]["all"]["caught"]
+        for item in out_cases:
+            pc = jr["per_case"][item["id"]]
+            item["judge"] = {"alone": pc["judge_alone"], "alone_why": pc["judge_alone_why"],
+                             "cascade": pc["cascade"], "cascade_stage": pc["cascade_stage"],
+                             "runs": [r["verdict"] for r in pc["runs"]], "unanimous": pc["unanimous"]}
+        # every case gets a prompt now, since the judge alone saw all of them
+        for item in out_cases:
+            item["judge_prompt"] = build_prompt(item["req_id"], RULES[item["req_id"]].text, by_id[item["id"]]["diff"])
     with open(os.path.join(ROOT, "demo", "data.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, indent=1)
     print("wrote demo/data.json:", len(out_cases), "cases")

@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 0,
+ "req_id": "SR-05",
+ "reply": "```json\n{\"verdict\": \"honored\", \"evidence\": \"r = requests.get(PARTNER_URL, timeout=5)\"}\n```"
+}

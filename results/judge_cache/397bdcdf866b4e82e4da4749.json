@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 1,
+ "req_id": "SR-02",
+ "reply": "```json\n{\"verdict\": \"violated\", \"evidence\": \"cur.execute(f\\\"SELECT * FROM users WHERE email = '{email}'\\\")\"}\n```"
+}

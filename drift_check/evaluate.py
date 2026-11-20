@@ -31,6 +31,29 @@ def run(cases, judge=offline_judge):
     return rows
 
 
+def run_judge_only(cases, judge):
+    """Judge every case on its own, no rules first (for a straight comparison)."""
+    rows = []
+    for c in cases:
+        rule = RULES[c["req_id"]]
+        verdict, why = judge(c["req_id"], rule.text, c["diff"])
+        rows.append({"id": c["id"], "req_id": c["req_id"], "label": c["label"],
+                     "kind": c.get("kind", "plain"), "pred": verdict,
+                     "stage": "judge", "why": why})
+    return rows
+
+
+def wilson(k, n, z=1.96):
+    """Wilson 95% interval for k successes out of n. None if n == 0."""
+    if not n:
+        return None
+    p = k / n
+    den = 1 + z * z / n
+    mid = (p + z * z / (2 * n)) / den
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / den
+    return [round(max(0.0, mid - half), 3), round(min(1.0, mid + half), 3)]
+
+
 def score(rows):
     n = len(rows)
     tp = sum(r["label"] == VIOLATED and r["pred"] == VIOLATED for r in rows)

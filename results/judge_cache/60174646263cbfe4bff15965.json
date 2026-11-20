@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 1,
+ "req_id": "SR-08",
+ "reply": "```json\n{\"verdict\": \"honored\", \"evidence\": \"inv = load_owned(Invoice, invoice_id)  # aborts 404 if not the caller's\"}\n```"
+}

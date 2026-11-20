@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 2,
+ "req_id": "SR-01",
+ "reply": "{\"verdict\": \"honored\", \"evidence\": \"hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())\"}"
+}

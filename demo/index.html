@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Drift Check · AI diff vs security review</title>
-<meta name="description" content="A labeled eval of 31 AI style code diffs against 10 security requirements. Regex rules catch plain drift and miss tricky drift.">
+<meta name="description" content="A labeled eval of 31 code diffs against 10 security requirements, comparing regex rules with a Gemini LLM judge on plain and tricky cases.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@
     <div class="section-head">
       <div>
         <h2>Findings</h2>
-        <p class="muted">Pick a case to see the diff, the line that drifts, and what the regex checker said about it.</p>
+        <p class="muted">Pick a case to see the diff, the line that drifts, and what the regex checker and the LLM judge said about it.</p>
       </div>
     </div>
     <div class="toolbar" role="toolbar" aria-label="Filters">
@@ -59,6 +59,7 @@
         <button data-v="missed">Missed <span class="cnt"></span></button>
         <button data-v="false_alarm">False alarm <span class="cnt"></span></button>
         <button data-v="review">Needs review <span class="cnt"></span></button>
+        <button data-v="judge_wrong">Judge wrong <span class="cnt"></span></button>
       </div>
     </div>
     <div class="findings">
@@ -70,26 +71,23 @@
   <section class="wrap section" id="scores">
     <div class="section-head">
       <div>
-        <h2>Scores</h2>
-        <p class="muted">Violated is the positive class. Counts are cases out of the stated total.</p>
+        <h2>Scores: regex vs LLM judge</h2>
+        <p class="muted">Violated is the positive class. Every count shows its denominator; brackets are Wilson 95% intervals, which are wide because the sets are small.</p>
+      </div>
+      <div class="seg" id="subsetToggle" role="tablist" aria-label="Subset">
+        <button data-v="plain">Plain</button>
+        <button data-v="hard" class="on">Tricky</button>
+        <button data-v="all">All</button>
       </div>
     </div>
     <div class="scores">
       <div class="card score-card">
         <div class="card-head">
-          <h3>Regex rules</h3><span class="chip chip-ok">Measured</span>
+          <h3 id="scoreTitle">Tricky diffs</h3><span class="chip chip-ok">Measured</span>
         </div>
         <div class="table-scroll"><table class="score-table" id="scoreTable"></table></div>
       </div>
-      <div class="card judge-card">
-        <div class="card-head">
-          <h3>LLM judge</h3><span class="chip chip-muted">Not run yet</span>
-        </div>
-        <p>The judge stage is wired into the pipeline but no model was called, so there are <b>no LLM numbers</b> to compare yet. The eval uses an offline judge that always abstains.</p>
-        <p>It would only see the cases the rules cannot decide:</p>
-        <div class="judge-stat" id="judgeStat"></div>
-        <p class="muted small">Open any "Needs review" case above to read the exact prompt it would get.</p>
-      </div>
+      <div class="card judge-card" id="judgeCard"></div>
     </div>
   </section>
 
@@ -97,7 +95,7 @@
     <div class="section-head">
       <div>
         <h2>Security requirements</h2>
-        <p class="muted">The 10 requirements from the mock design review. Each chip is one labeled case; click it to open the finding.</p>
+        <p class="muted">The 10 requirements from the mock design review. Each chip is one labeled case, coloured by what the regex rules did. Click it to open the finding.</p>
       </div>
       <div class="legend" aria-label="Legend">
         <span><i class="dot d-caught"></i>Caught</span>
@@ -119,8 +117,9 @@
         <h3>Pipeline</h3>
         <ol>
           <li><b>Rules.</b> One regex rule per requirement in <code>drift_check/rules.py</code>. It reads only the lines the diff adds and answers honored, violated or unknown.</li>
-          <li><b>Judge.</b> Unknown cases go to <code>drift_check/judge.py</code>. It builds the prompt and safely parses a JSON reply. In this eval the judge is offline and abstains, so every number here comes from the rules alone.</li>
-          <li><b>Scoring.</b> <code>drift_check/evaluate.py</code> counts caught, false alarms, silent misses (said honored on a real violation) and cases sent to review, split by plain and tricky.</li>
+          <li><b>Judge.</b> <code>drift_check/llm_judge.py</code> sends the prompt from <code>drift_check/judge.py</code> to Gemini (free tier, temperature 0) three times per case and takes the majority verdict. Bad JSON or a split vote counts as unknown. Every reply is cached in <code>results/judge_cache/</code>, so the numbers can be audited and rerun for free.</li>
+          <li><b>Three systems.</b> Regex alone. Regex then judge, where only the cases the rules mark unknown go to the judge. Judge alone, where the judge sees every case with no rules.</li>
+          <li><b>Scoring.</b> <code>drift_check/evaluate.py</code> counts caught, false alarms, silent misses (said honored on a real violation) and unresolved cases, split by plain and tricky. Brackets are Wilson 95% intervals.</li>
         </ol>
         <h3>Outcome labels on this page</h3>
         <ul>
@@ -134,13 +133,17 @@
           <li>The plain numbers are in sample. The rules and plain cases were written together, so 1.00 precision on plain says little. The tricky set is the more honest number and has only 10 cases.</li>
           <li>One labeler, Python and Flask only, no inter rater check. Real agent diffs are bigger and span files.</li>
           <li>The rules see one diff with no repo context, so they cannot follow a helper into another file.</li>
+          <li>Three tricky cases carry a code comment that hints at the answer (<code># wraps hashlib.md5</code>, <code>fake value, never a real key</code>, <code># aborts 404 if not the caller's</code>). The judge may have leaned on those; regex ignores them. Real agent diffs will not always be that helpful.</li>
+          <li>The judge got all 31 cases right, but with 31 cases the 95% interval on its recall still runs from 0.82 to 1.00. Rule errors stay in the regex then judge cascade, because the judge is never asked about cases the rules already decided.</li>
+          <li>One model, one prompt, three runs per case. A different model or prompt could score differently, and the judge saw the requirement text the cases were written against.</li>
           <li>The highlighted drift line and the CWE tag on each finding were added for this page. They do not change any label or score.</li>
           <li>All code is synthetic and written for the repo. This is not a claim about how Seezo's validator works.</li>
         </ul>
         <h3>Reproduce</h3>
         <pre class="code-block">python data/build_cases.py
 python -m drift_check eval
-python demo/build_data.py   # writes the data this page reads</pre>
+python scripts/run_judge.py   # Gemini judge, cached replies
+python demo/build_data.py     # writes the data this page reads</pre>
       </div>
     </div>
   </section>
@@ -148,7 +151,7 @@ python demo/build_data.py   # writes the data this page reads</pre>
 
 <footer class="footer">
   <div class="wrap footer-in">
-    <span>Built against the Validate step described on seezo.io. Results from <code>python -m drift_check eval</code>, 20 Nov 2026.</span>
+    <span>Built against the Validate step described on seezo.io. Results from <code>python -m drift_check eval</code> and <code>scripts/run_judge.py</code>.</span>
     <a href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">github.com/techi101/ai-diff-drift-check</a>
   </div>
 </footer>

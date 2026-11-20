@@ -1,0 +1,7 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "model_version": "gemini-3.5-flash-lite",
+ "repeat": 1,
+ "req_id": "SR-03",
+ "reply": "```json\n{\"verdict\": \"honored\", \"evidence\": \"token = \\\"test_token_not_real_123456\\\"\"}\n```"
+}
