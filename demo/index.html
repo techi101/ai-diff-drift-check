@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drift Check · AI diff vs security review</title>
+<meta name="description" content="A labeled eval of 31 AI style code diffs against 10 security requirements. Regex rules catch plain drift and miss tricky drift.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="#top" aria-label="Drift Check home">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M9 16.5l4.5 4.5L23 11"/></svg></span>
+      <span class="brand-name">Drift Check</span>
+      <span class="brand-tag">Validate step eval</span>
+    </a>
+    <nav class="nav">
+      <a href="#findings">Findings</a>
+      <a href="#scores">Scores</a>
+      <a href="#requirements">Requirements</a>
+      <a class="btn btn-dark" href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero wrap">
+    <p class="eyebrow">What am I looking at</p>
+    <h1>Does AI written code still honor the security review?</h1>
+    <p class="lede"><b>Problem.</b> A coding agent writes a diff after a security design review. Did it drift from the requirements the review set?</p>
+    <p class="lede"><b>Result.</b> <span id="headline">Loading results</span></p>
+    <div class="kpis" id="kpis" aria-live="polite"></div>
+  </section>
+
+  <section class="wrap section" id="findings">
+    <div class="section-head">
+      <div>
+        <h2>Findings</h2>
+        <p class="muted">Pick a case to see the diff, the line that drifts, and what the regex checker said about it.</p>
+      </div>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Filters">
+      <div class="seg" id="kindFilter" role="tablist" aria-label="Case type">
+        <button data-v="all" class="on">All <span class="cnt"></span></button>
+        <button data-v="plain">Plain <span class="cnt"></span></button>
+        <button data-v="hard">Tricky <span class="cnt"></span></button>
+      </div>
+      <div class="seg" id="outFilter" role="tablist" aria-label="Outcome">
+        <button data-v="all" class="on">Any outcome</button>
+        <button data-v="caught">Caught <span class="cnt"></span></button>
+        <button data-v="missed">Missed <span class="cnt"></span></button>
+        <button data-v="false_alarm">False alarm <span class="cnt"></span></button>
+        <button data-v="review">Needs review <span class="cnt"></span></button>
+      </div>
+    </div>
+    <div class="findings">
+      <aside class="list" id="caseList" aria-label="Cases"></aside>
+      <article class="detail" id="detail"></article>
+    </div>
+  </section>
+
+  <section class="wrap section" id="scores">
+    <div class="section-head">
+      <div>
+        <h2>Scores</h2>
+        <p class="muted">Violated is the positive class. Counts are cases out of the stated total.</p>
+      </div>
+    </div>
+    <div class="scores">
+      <div class="card score-card">
+        <div class="card-head">
+          <h3>Regex rules</h3><span class="chip chip-ok">Measured</span>
+        </div>
+        <div class="table-scroll"><table class="score-table" id="scoreTable"></table></div>
+      </div>
+      <div class="card judge-card">
+        <div class="card-head">
+          <h3>LLM judge</h3><span class="chip chip-muted">Not run yet</span>
+        </div>
+        <p>The judge stage is wired into the pipeline but no model was called, so there are <b>no LLM numbers</b> to compare yet. The eval uses an offline judge that always abstains.</p>
+        <p>It would only see the cases the rules cannot decide:</p>
+        <div class="judge-stat" id="judgeStat"></div>
+        <p class="muted small">Open any "Needs review" case above to read the exact prompt it would get.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="requirements">
+    <div class="section-head">
+      <div>
+        <h2>Security requirements</h2>
+        <p class="muted">The 10 requirements from the mock design review. Each chip is one labeled case; click it to open the finding.</p>
+      </div>
+      <div class="legend" aria-label="Legend">
+        <span><i class="dot d-caught"></i>Caught</span>
+        <span><i class="dot d-miss"></i>Missed</span>
+        <span><i class="dot d-fa"></i>False alarm</span>
+        <span><i class="dot d-review"></i>Needs review</span>
+        <span><i class="dot d-pass"></i>Correct pass</span>
+      </div>
+    </div>
+    <div class="reqs" id="reqList"></div>
+  </section>
+
+  <section class="wrap section" id="method">
+    <div class="card method">
+      <h2>How it was measured</h2>
+      <p>31 small diffs written by hand across 10 security requirements, each labeled honored or violated before the rules were run. 21 are plain (what an agent normally writes) and 10 are tricky (helpers, variables, look alike strings).</p>
+      <button class="btn btn-ghost" id="moreBtn" aria-expanded="false" aria-controls="moreBody">Show more</button>
+      <div id="moreBody" hidden>
+        <h3>Pipeline</h3>
+        <ol>
+          <li><b>Rules.</b> One regex rule per requirement in <code>drift_check/rules.py</code>. It reads only the lines the diff adds and answers honored, violated or unknown.</li>
+          <li><b>Judge.</b> Unknown cases go to <code>drift_check/judge.py</code>. It builds the prompt and safely parses a JSON reply. In this eval the judge is offline and abstains, so every number here comes from the rules alone.</li>
+          <li><b>Scoring.</b> <code>drift_check/evaluate.py</code> counts caught, false alarms, silent misses (said honored on a real violation) and cases sent to review, split by plain and tricky.</li>
+        </ol>
+        <h3>Outcome labels on this page</h3>
+        <ul>
+          <li><b>Caught</b>: labeled violated, rules said violated.</li>
+          <li><b>Missed</b>: labeled violated, rules said honored (silent miss) or unknown (sent to review).</li>
+          <li><b>False alarm</b>: labeled honored, rules said violated.</li>
+          <li><b>Needs review</b>: rules said unknown.</li>
+        </ul>
+        <h3>Honest limits</h3>
+        <ul>
+          <li>The plain numbers are in sample. The rules and plain cases were written together, so 1.00 precision on plain says little. The tricky set is the more honest number and has only 10 cases.</li>
+          <li>One labeler, Python and Flask only, no inter rater check. Real agent diffs are bigger and span files.</li>
+          <li>The rules see one diff with no repo context, so they cannot follow a helper into another file.</li>
+          <li>The highlighted drift line and the CWE tag on each finding were added for this page. They do not change any label or score.</li>
+          <li>All code is synthetic and written for the repo. This is not a claim about how Seezo's validator works.</li>
+        </ul>
+        <h3>Reproduce</h3>
+        <pre class="code-block">python data/build_cases.py
+python -m drift_check eval
+python demo/build_data.py   # writes the data this page reads</pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-in">
+    <span>Built against the Validate step described on seezo.io. Results from <code>python -m drift_check eval</code>, 20 Nov 2026.</span>
+    <a href="https://github.com/techi101/ai-diff-drift-check" target="_blank" rel="noopener">github.com/techi101/ai-diff-drift-check</a>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

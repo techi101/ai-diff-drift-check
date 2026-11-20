@@ -1,3 +1,13 @@
+<p align="center"><a href="https://ai-diff-drift-check.vercel.app"><img src="docs/screenshot-1440.png" alt="Drift Check demo: findings view with the drifted line highlighted" width="900"></a></p>
+
+**Problem:** a coding agent writes a diff after a security design review. Did the code drift from the requirements that review set?
+
+**Result:** a regex checker caught **10 of 11** violations in plain diffs but only **1 of 6** in tricky ones (recall 0.91 vs 0.17), let 1 tricky violation pass as safe, and sent 7 of 31 cases to review. The LLM judge stage is wired in but no model was run, so there are no LLM numbers yet.
+
+**[Try it live: ai-diff-drift-check.vercel.app](https://ai-diff-drift-check.vercel.app)** (source in `demo/`, data rebuilt from the real eval by `python demo/build_data.py`)
+
+---
+
 # drift-check: a small eval for "does the AI-written code honor the security review?"
 
 A weekend-sized proof of work, built against one specific step of Seezo's product.
